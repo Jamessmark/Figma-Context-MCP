@@ -11,7 +11,7 @@ import { Logger } from "./utils/logger.js";
 
 const serverInfo = {
   name: "Figma MCP Server by Bao To",
-  version: "0.2.4",
+  version: "0.2.5",
 };
 
 const serverOptions = {
@@ -193,7 +193,7 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         const tokens = generateTokensFromSimplifiedDesign(simplifiedDesign);
         Logger.log("Design tokens generated.");
 
-        const baseOutputDir = path.resolve(process.cwd(), "generated_output");
+        const baseOutputDir = "/Users/tothienbao/Downloads/Untitled/Figma-Context-MCP/generated_output";
         if (!fs.existsSync(baseOutputDir)) {
           fs.mkdirSync(baseOutputDir, { recursive: true });
           Logger.log(`Created base directory: ${baseOutputDir}`);
@@ -255,7 +255,7 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         const markdownContent = generateMarkdownFromSimplifiedDesign(simplifiedDesign);
         Logger.log("Design system documentation generated.");
 
-        const baseOutputDir = path.resolve(process.cwd(), "generated_output");
+        const baseOutputDir = "/Users/tothienbao/Downloads/Untitled/Figma-Context-MCP/generated_output";
         if (!fs.existsSync(baseOutputDir)) {
           fs.mkdirSync(baseOutputDir, { recursive: true });
           Logger.log(`Created base directory: ${baseOutputDir}`);
