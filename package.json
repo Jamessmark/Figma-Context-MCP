@@ -39,7 +39,7 @@
   "packageManager": "pnpm@10.10.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git"
+    "url": "git+https://github.com/tothienbao6a0/Figma-Context-MCP.git"
   },
   "keywords": [
     "figma",
