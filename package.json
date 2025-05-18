@@ -1,7 +1,7 @@
 {
   "name": "@tothienbao6a0/figma-mcp-server",
-  "version": "0.1.0",
-  "description": "A forked version of the Model Context Protocol server for Figma integration by Bao To.",
+  "version": "0.2.0",
+  "description": "A Model Context Protocol server for accessing Figma design data, extended by Bao To.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
