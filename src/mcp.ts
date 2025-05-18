@@ -11,7 +11,7 @@ import { Logger } from "./utils/logger.js";
 
 const serverInfo = {
   name: "Figma MCP Server by Bao To",
-  version: "0.2.5",
+  version: "0.2.6",
 };
 
 const serverOptions = {
@@ -193,22 +193,16 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         const tokens = generateTokensFromSimplifiedDesign(simplifiedDesign);
         Logger.log("Design tokens generated.");
 
-        const baseOutputDir = "/Users/tothienbao/Downloads/Untitled/Figma-Context-MCP/generated_output";
-        if (!fs.existsSync(baseOutputDir)) {
-          fs.mkdirSync(baseOutputDir, { recursive: true });
-          Logger.log(`Created base directory: ${baseOutputDir}`);
-        }
+        // Sanitize Figma file name for use as a local file name
+        const safeFileNameBase = simplifiedDesign.name 
+            ? simplifiedDesign.name.replace(/[\/\s<>:"\\|?*]+/g, '_') 
+            : 'untitled_figma_design';
+        const outputFileName = `${safeFileNameBase}_tokens.json`;
+        // Resolve path to the project's current working directory
+        const outputFilePath = path.resolve(process.cwd(), outputFileName);
 
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-        const dirName = outputDirName || "design_tokens";
-        const outputDirPath = path.join(baseOutputDir, dirName, timestamp);
-
-        fs.mkdirSync(outputDirPath, { recursive: true });
-        Logger.log(`Created directory: ${outputDirPath}`);
-
-        const outputFilePath = path.join(outputDirPath, "tokens.json");
         fs.writeFileSync(outputFilePath, JSON.stringify(tokens, null, 2));
-        Logger.log(`Design tokens saved to: ${outputFilePath}`);
+        Logger.log(`Design tokens successfully generated and saved to: ${outputFilePath}`);
 
         return {
           content: [
@@ -255,22 +249,16 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         const markdownContent = generateMarkdownFromSimplifiedDesign(simplifiedDesign);
         Logger.log("Design system documentation generated.");
 
-        const baseOutputDir = "/Users/tothienbao/Downloads/Untitled/Figma-Context-MCP/generated_output";
-        if (!fs.existsSync(baseOutputDir)) {
-          fs.mkdirSync(baseOutputDir, { recursive: true });
-          Logger.log(`Created base directory: ${baseOutputDir}`);
-        }
+        // Sanitize Figma file name for use as a local file name
+        const safeFileNameBase = simplifiedDesign.name 
+            ? simplifiedDesign.name.replace(/[\/\s<>:"\\|?*]+/g, '_') 
+            : 'untitled_figma_design';
+        const outputFileName = `${safeFileNameBase}_design_system.md`;
+        // Resolve path to the project's current working directory
+        const outputFilePath = path.resolve(process.cwd(), outputFileName);
 
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-        const dirName = outputDirName || "design_system_docs";
-        const outputDirPath = path.join(baseOutputDir, dirName, timestamp);
-
-        fs.mkdirSync(outputDirPath, { recursive: true });
-        Logger.log(`Created directory: ${outputDirPath}`);
-
-        const outputFilePath = path.join(outputDirPath, "design_system.md");
         fs.writeFileSync(outputFilePath, markdownContent);
-        Logger.log(`Design system documentation saved to: ${outputFilePath}`);
+        Logger.log(`Design system documentation successfully generated and saved to: ${outputFilePath}`);
         
         return {
           content: [
