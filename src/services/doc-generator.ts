@@ -44,22 +44,31 @@ export function generateMarkdownFromSimplifiedDesign(design: SimplifiedDesign): 
 
     for (const styleId in styles) {
       const styleDefinition = styles[styleId as keyof GlobalVars['styles']];
-      const name = styleId.replace(/^(fill_|text_|effect_|layout_|stroke_)/, '');
+      // Extract the base name by removing the known prefix for display
+      let displayName = styleId;
+      const knownPrefixes = ["fill_", "text_", "effect_", "layout_", "stroke_"];
+      for (const p of knownPrefixes) {
+        if (styleId.startsWith(p)) {
+          displayName = styleId.substring(p.length);
+          break;
+        }
+      }
 
       if (styleId.startsWith('fill_')) {
-        categorizedStyles.colors[name] = styleDefinition;
+        categorizedStyles.colors[displayName] = styleDefinition;
       } else if (styleId.startsWith('text_')) {
-        categorizedStyles.typography[name] = styleDefinition;
+        categorizedStyles.typography[displayName] = styleDefinition;
       } else if (styleId.startsWith('effect_')) {
-        categorizedStyles.effects[name] = styleDefinition;
+        categorizedStyles.effects[displayName] = styleDefinition;
       } else if (styleId.startsWith('layout_')) {
-        categorizedStyles.layout[name] = styleDefinition;
+        categorizedStyles.layout[displayName] = styleDefinition;
       } else if (styleId.startsWith('stroke_')) {
         const stroke = styleDefinition as SimplifiedStroke;
         if (stroke.colors && stroke.colors.length === 1) {
           const strokeColor = stroke.colors[0];
-          if (typeof strokeColor === 'string' || strokeColor.hex || strokeColor.rgba) {
-             categorizedStyles.colors['stroke_' + s(name)] = styleDefinition;
+          // Ensure the strokeColor is a simple color before categorizing it as a color
+          if (typeof strokeColor === 'string' || (typeof strokeColor === 'object' && (strokeColor.hex || strokeColor.rgba))) {
+             categorizedStyles.colors['stroke_' + displayName] = styleDefinition; // Prefix with stroke_ to differentiate
           }
         }
       }
@@ -231,8 +240,12 @@ export function generateMarkdownFromSimplifiedDesign(design: SimplifiedDesign): 
           nodesMd += indent + '  - Text Content: "' + s(currentNode.text) + '"\n';
         }
         if (currentNode.type === 'INSTANCE') {
-          nodesMd += indent + '  - (Instance of a component. Further details depend on main component definition.)\n';
-          // Future: if mainComponentId is available on SimplifiedNode, could print: `Instance of: ${currentNode.mainComponentId}`
+          let instanceText = '  - (Instance of a component.';
+          if (currentNode.mainComponentId) {
+            instanceText += ` Main Component ID: ${s(currentNode.mainComponentId)}.`;
+          }
+          instanceText += ' Further details depend on main component definition.)\n';
+          nodesMd += indent + instanceText;
         }
         // For frames or other elements, list direct style applications if any
         // These are style *references* to the globalVars.styles table

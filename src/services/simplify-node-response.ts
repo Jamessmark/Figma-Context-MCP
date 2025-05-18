@@ -5,6 +5,8 @@ import type {
   Paint,
   Vector,
   GetFileResponse,
+  StyleMetadata,
+  StyleType as FigmaStyleType
 } from "@figma/rest-api-spec";
 import { hasValue, isRectangleCornerRadii, isTruthy } from "~/utils/identity.js";
 import {
@@ -66,6 +68,7 @@ export interface SimplifiedNode {
   id: string;
   name: string;
   type: string; // e.g. FRAME, TEXT, INSTANCE, RECTANGLE, etc.
+  mainComponentId?: string;
   // geometry
   boundingBox?: BoundingBox;
   // text
@@ -117,12 +120,20 @@ export interface ColorValue {
   opacity: number;
 }
 
+// Type for the map of Figma's published styles
+type FigmaPublishedStylesMap = Record<string, StyleMetadata>;
+
 // ---------------------- PARSING ----------------------
 export function parseFigmaResponse(data: GetFileResponse | GetFileNodesResponse): SimplifiedDesign {
   const { name, lastModified, thumbnailUrl } = data;
   let nodes: FigmaDocumentNode[];
+  let figmaPublishedStyles: FigmaPublishedStylesMap | undefined = undefined;
+
   if ("document" in data) {
     nodes = Object.values(data.document.children);
+    if (data.styles) {
+      figmaPublishedStyles = data.styles;
+    }
   } else {
     nodes = Object.values(data.nodes).map((n) => n.document);
   }
@@ -131,7 +142,7 @@ export function parseFigmaResponse(data: GetFileResponse | GetFileNodesResponse)
   };
   const simplifiedNodes: SimplifiedNode[] = nodes
     .filter(isVisible)
-    .map((n) => parseNode(globalVars, n))
+    .map((n) => parseNode(globalVars, n, undefined, figmaPublishedStyles))
     .filter((child) => child !== null && child !== undefined);
 
   return {
@@ -161,34 +172,65 @@ const findNodeById = (id: string, nodes: SimplifiedNode[]): SimplifiedNode | und
   return undefined;
 };
 
+function sanitizeNameForId(name: string): string {
+  return name.replace(/[^a-zA-Z0-9_\-]+/g, '_').replace(/\s+/g, '_');
+}
+
 /**
  * Find or create global variables
  * @param globalVars - Global variables object
  * @param value - Value to store
  * @param prefix - Variable ID prefix
+ * @param appliedStyleId - ID of the Figma published style applied to the node (e.g., S:guid...)
+ * @param figmaPublishedStyles - Map of Figma's published styles
  * @returns Variable ID
  */
-function findOrCreateVar(globalVars: GlobalVars, value: any, prefix: string): StyleId {
+function findOrCreateVar(
+  globalVars: GlobalVars, 
+  value: any, 
+  prefix: string, 
+  appliedStyleId?: string, 
+  figmaPublishedStyles?: FigmaPublishedStylesMap
+): StyleId {
   // Check if the same value already exists
-  const [existingVarId] =
+  const [existingVarIdByValue] =
     Object.entries(globalVars.styles).find(
       ([_, existingValue]) => JSON.stringify(existingValue) === JSON.stringify(value),
     ) ?? [];
 
-  if (existingVarId) {
-    return existingVarId as StyleId;
+  if (existingVarIdByValue) {
+    return existingVarIdByValue as StyleId;
   }
 
-  // Create a new variable if it doesn't exist
-  const varId = generateVarId(prefix);
-  globalVars.styles[varId] = value;
-  return varId;
+  // Create a new variable if it doesn't exist by value
+  let newVarId: string;
+  const figmaStyleName = appliedStyleId && figmaPublishedStyles && figmaPublishedStyles[appliedStyleId]?.name;
+
+  if (figmaStyleName) {
+    const saneName = sanitizeNameForId(figmaStyleName);
+    let potentialId = `${prefix}_${saneName}`;
+    if (globalVars.styles[potentialId]) { // Check if this human-readable name is taken by a DIFFERENT value
+      let counter = 1;
+      while (globalVars.styles[`${potentialId}_${counter}`]) {
+        counter++;
+      }
+      newVarId = `${potentialId}_${counter}`;
+    } else {
+      newVarId = potentialId;
+    }
+  } else {
+    newVarId = generateVarId(prefix); // Fallback to random ID
+  }
+  
+  globalVars.styles[newVarId] = value;
+  return newVarId as StyleId;
 }
 
 function parseNode(
   globalVars: GlobalVars,
   n: FigmaDocumentNode,
   parent?: FigmaDocumentNode,
+  figmaPublishedStyles?: FigmaPublishedStylesMap
 ): SimplifiedNode | null {
   const { id, name, type } = n;
 
@@ -197,6 +239,10 @@ function parseNode(
     name,
     type,
   };
+
+  if (type === 'INSTANCE' && n.componentId) {
+    simplified.mainComponentId = n.componentId;
+  }
 
   // text
   if (hasValue("style", n) && Object.keys(n.style).length) {
@@ -217,31 +263,41 @@ function parseNode(
       textAlignHorizontal: style.textAlignHorizontal,
       textAlignVertical: style.textAlignVertical,
     };
-    simplified.textStyle = findOrCreateVar(globalVars, textStyle, "style");
+    // Use FigmaStyleType.TEXT (which should resolve to "TEXT")
+    const appliedTextStyleId = n.styles?.[FigmaStyleType.TEXT as keyof typeof n.styles]; 
+    simplified.textStyle = findOrCreateVar(globalVars, textStyle, "text", appliedTextStyleId, figmaPublishedStyles);
   }
 
-  // fills & strokes
+  // fills
   if (hasValue("fills", n) && Array.isArray(n.fills) && n.fills.length) {
-    // const fills = simplifyFills(n.fills.map(parsePaint));
     const fills = n.fills.map(parsePaint);
-    simplified.fills = findOrCreateVar(globalVars, fills, "fill");
+    const appliedFillStyleId = n.styles?.[FigmaStyleType.FILL as keyof typeof n.styles];
+    simplified.fills = findOrCreateVar(globalVars, fills, "fill", appliedFillStyleId, figmaPublishedStyles);
   }
 
   const strokes = buildSimplifiedStrokes(n);
   if (strokes.colors.length) {
-    simplified.strokes = findOrCreateVar(globalVars, strokes, "stroke");
+    const appliedStrokeStyleId = n.styles?.[FigmaStyleType.STROKE as keyof typeof n.styles];
+    simplified.strokes = findOrCreateVar(globalVars, strokes, "stroke", appliedStrokeStyleId, figmaPublishedStyles);
   }
 
   const effects = buildSimplifiedEffects(n);
   if (Object.keys(effects).length) {
-    simplified.effects = findOrCreateVar(globalVars, effects, "effect");
+    const appliedEffectStyleId = n.styles?.[FigmaStyleType.EFFECT as keyof typeof n.styles];
+    simplified.effects = findOrCreateVar(globalVars, effects, "effect", appliedEffectStyleId, figmaPublishedStyles);
   }
 
-  // Process layout
+  // Process layout (Auto Layout properties)
   const layout = buildSimplifiedLayout(n, parent);
-  if (Object.keys(layout).length > 1) {
-    simplified.layout = findOrCreateVar(globalVars, layout, "layout");
+  if (Object.keys(layout).length > 1) { // Only store if more than just {mode: "none"}
+    // For layout properties derived from Auto Layout, there isn't a direct Figma "Style" ID in n.styles like FILL or TEXT.
+    // Layout Grid styles are different (n.styles.GRID).
+    // So, we pass undefined for appliedStyleId for these synthesized Auto Layout objects.
+    simplified.layout = findOrCreateVar(globalVars, layout, "layout", undefined, figmaPublishedStyles);
   }
+  // TODO: Future: If we specifically parse Layout Grids and want to name them if they are styled,
+  // we would need a separate call to findOrCreateVar for them, using n.styles.GRID.
+  // For now, buildSimplifiedLayout primarily focuses on Auto Layout properties, not separate grid styles.
 
   // Keep other simple properties directly
   if (hasValue("characters", n, isTruthy)) {
@@ -266,7 +322,7 @@ function parseNode(
   if (hasValue("children", n) && n.children.length > 0) {
     let children = n.children
       .filter(isVisible)
-      .map((child) => parseNode(globalVars, child, n))
+      .map((child) => parseNode(globalVars, child, n, figmaPublishedStyles))
       .filter((child) => child !== null && child !== undefined);
     if (children.length) {
       simplified.children = children;

@@ -14,7 +14,16 @@ interface DesignTokens {
 }
 
 function categorizeStyle(styleId: string, styleDefinition: StyleTypes): { category: keyof DesignTokens | null; name: string; token: any } {
-  const name = styleId.replace(/^(fill_|text_|effect_|layout_|stroke_)/, '');
+  // Extract the base name by removing the known prefix
+  let name = styleId; // Default to full styleId if no known prefix is matched
+  const knownPrefixes = ["fill_", "text_", "effect_", "layout_", "stroke_"];
+  for (const p of knownPrefixes) {
+    if (styleId.startsWith(p)) {
+      name = styleId.substring(p.length);
+      break;
+    }
+  }
+
   let category: keyof DesignTokens | null = null;
   let token: any = { value: styleDefinition }; 
 
