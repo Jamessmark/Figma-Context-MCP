@@ -207,13 +207,15 @@ function findOrCreateVar(
 
   if (figmaStyleName) {
     const saneName = sanitizeNameForId(figmaStyleName);
-    let potentialId = `${prefix}_${saneName}`;
+    let potentialId = `${prefix}_${saneName}` as StyleId;
     if (globalVars.styles[potentialId]) { // Check if this human-readable name is taken by a DIFFERENT value
       let counter = 1;
-      while (globalVars.styles[`${potentialId}_${counter}`]) {
+      let tempId = `${potentialId}_${counter}` as StyleId;
+      while (globalVars.styles[tempId]) {
         counter++;
+        tempId = `${potentialId}_${counter}` as StyleId;
       }
-      newVarId = `${potentialId}_${counter}`;
+      newVarId = tempId;
     } else {
       newVarId = potentialId;
     }
@@ -221,7 +223,7 @@ function findOrCreateVar(
     newVarId = generateVarId(prefix); // Fallback to random ID
   }
   
-  globalVars.styles[newVarId] = value;
+  globalVars.styles[newVarId as StyleId] = value;
   return newVarId as StyleId;
 }
 
