@@ -5,8 +5,7 @@ import type {
   Paint,
   Vector,
   GetFileResponse,
-  StyleMetadata,
-  StyleType as FigmaStyleType
+  Style,
 } from "@figma/rest-api-spec";
 import { hasValue, isRectangleCornerRadii, isTruthy } from "~/utils/identity.js";
 import {
@@ -121,7 +120,7 @@ export interface ColorValue {
 }
 
 // Type for the map of Figma's published styles
-type FigmaPublishedStylesMap = Record<string, StyleMetadata>;
+type FigmaPublishedStylesMap = Record<string, Style>;
 
 // ---------------------- PARSING ----------------------
 export function parseFigmaResponse(data: GetFileResponse | GetFileNodesResponse): SimplifiedDesign {
@@ -263,27 +262,38 @@ function parseNode(
       textAlignHorizontal: style.textAlignHorizontal,
       textAlignVertical: style.textAlignVertical,
     };
-    // Use FigmaStyleType.TEXT (which should resolve to "TEXT")
-    const appliedTextStyleId = n.styles?.[FigmaStyleType.TEXT as keyof typeof n.styles]; 
+    let appliedTextStyleId: string | undefined = undefined;
+    if ('styles' in n && n.styles) {
+        appliedTextStyleId = n.styles["TEXT"];
+    }
     simplified.textStyle = findOrCreateVar(globalVars, textStyle, "text", appliedTextStyleId, figmaPublishedStyles);
   }
 
   // fills
   if (hasValue("fills", n) && Array.isArray(n.fills) && n.fills.length) {
     const fills = n.fills.map(parsePaint);
-    const appliedFillStyleId = n.styles?.[FigmaStyleType.FILL as keyof typeof n.styles];
+    let appliedFillStyleId: string | undefined = undefined;
+    if ('styles' in n && n.styles) {
+        appliedFillStyleId = n.styles["FILL"];
+    }
     simplified.fills = findOrCreateVar(globalVars, fills, "fill", appliedFillStyleId, figmaPublishedStyles);
   }
 
   const strokes = buildSimplifiedStrokes(n);
   if (strokes.colors.length) {
-    const appliedStrokeStyleId = n.styles?.[FigmaStyleType.STROKE as keyof typeof n.styles];
+    let appliedStrokeStyleId: string | undefined = undefined;
+    if ('styles' in n && n.styles) {
+        appliedStrokeStyleId = n.styles["STROKE"];
+    }
     simplified.strokes = findOrCreateVar(globalVars, strokes, "stroke", appliedStrokeStyleId, figmaPublishedStyles);
   }
 
   const effects = buildSimplifiedEffects(n);
   if (Object.keys(effects).length) {
-    const appliedEffectStyleId = n.styles?.[FigmaStyleType.EFFECT as keyof typeof n.styles];
+    let appliedEffectStyleId: string | undefined = undefined;
+    if ('styles' in n && n.styles) {
+        appliedEffectStyleId = n.styles["EFFECT"];
+    }
     simplified.effects = findOrCreateVar(globalVars, effects, "effect", appliedEffectStyleId, figmaPublishedStyles);
   }
 
