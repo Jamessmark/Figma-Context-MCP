@@ -1,12 +1,5 @@
-<a href="https://www.framelink.ai/?utm_source=github&utm_medium=referral&utm_campaign=readme" target="_blank" rel="noopener">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://www.framelink.ai/github/HeaderDark.png" />
-    <img alt="Framelink" src="https://www.framelink.ai/github/HeaderLight.png" />
-  </picture>
-</a>
-
 <div align="center">
-  <h1>Framelink Figma MCP Server</h1>
+  <h1>Figma MCP Server by Bao To</h1>
   <p>
     🌐 Available in:
     <a href="README.ko.md">한국어 (Korean)</a> |
@@ -14,28 +7,28 @@
     <a href="README.zh.md">中文 (Chinese)</a>
   </p>
   <h3>Give your coding agent access to your Figma data.<br/>Implement designs in any framework in one-shot.</h3>
-  <a href="https://npmcharts.com/compare/figma-developer-mcp?interval=30">
-    <img alt="weekly downloads" src="https://img.shields.io/npm/dm/figma-developer-mcp.svg">
+  <a href="https://npmcharts.com/compare/@tothienbao6a0/figma-mcp-server?interval=30">
+    <img alt="weekly downloads" src="https://img.shields.io/npm/dm/@tothienbao6a0/figma-mcp-server.svg">
   </a>
-  <a href="https://github.com/GLips/Figma-Context-MCP/blob/main/LICENSE">
-    <img alt="MIT License" src="https://img.shields.io/github/license/GLips/Figma-Context-MCP" />
+  <a href="https://github.com/tothienbao6a0/Figma-Context-MCP/blob/main/LICENSE">
+    <img alt="MIT License" src="https://img.shields.io/github/license/tothienbao6a0/Figma-Context-MCP" />
   </a>
-  <a href="https://framelink.ai/discord">
+  <!-- Link to your Discord or social if you have one, otherwise remove -->
+  <!-- <a href="https://framelink.ai/discord">
     <img alt="Discord" src="https://img.shields.io/discord/1352337336913887343?color=7389D8&label&logo=discord&logoColor=ffffff" />
-  </a>
+  </a> -->
   <br />
-  <a href="https://twitter.com/glipsman">
+  <!-- Link to your Twitter or social if you have one, otherwise remove -->
+  <!-- <a href="https://twitter.com/glipsman">
     <img alt="Twitter" src="https://img.shields.io/twitter/url?url=https%3A%2F%2Fx.com%2Fglipsman&label=%40glipsman" />
-  </a>
+  </a> -->
 </div>
 
 <br/>
 
-Give [Cursor](https://cursor.sh/) and other AI-powered coding tools access to your Figma files with this [Model Context Protocol](https://modelcontextprotocol.io/introduction) server.
+Give [Cursor](https://cursor.sh/) and other AI-powered coding tools access to your Figma files with this [Model Context Protocol](https://modelcontextprotocol.io/introduction) server, **Figma MCP Server by Bao To**.
 
-When Cursor has access to Figma design data, it's **way** better at one-shotting designs accurately than alternative approaches like pasting screenshots.
-
-<h3><a href="https://www.framelink.ai/docs/quickstart?utm_source=github&utm_medium=referral&utm_campaign=readme">See quickstart instructions →</a></h3>
+When Cursor has access to Figma design data, it can be significantly better at implementing designs accurately compared to alternative approaches like pasting screenshots.
 
 ## Demo
 
@@ -47,18 +40,16 @@ When Cursor has access to Figma design data, it's **way** better at one-shotting
 
 1. Open your IDE's chat (e.g. agent mode in Cursor).
 2. Paste a link to a Figma file, frame, or group.
-3. Ask Cursor to do something with the Figma file—e.g. implement the design.
-4. Cursor will fetch the relevant metadata from Figma and use it to write your code.
+3. Ask your AI agent to do something with the Figma file—e.g. implement the design.
+4. The AI agent, configured to use **Figma MCP Server by Bao To**, will fetch the relevant metadata from Figma via this server and use it to write your code.
 
-This MCP server is specifically designed for use with Cursor. Before responding with context from the [Figma API](https://www.figma.com/developers/api), it simplifies and translates the response so only the most relevant layout and styling information is provided to the model.
+This MCP server is designed to simplify and translate responses from the [Figma API](https://www.figma.com/developers/api) so that only the most relevant layout and styling information is provided to the AI model.
 
 Reducing the amount of context provided to the model helps make the AI more accurate and the responses more relevant.
 
 ## Getting Started
 
-Many code editors and other AI clients use a configuration file to manage MCP servers.
-
-The `figma-developer-mcp` server can be configured by adding the following to your configuration file.
+Your AI coding client (like Cursor) can be configured to use this MCP server. Add the following to your client's MCP server configuration file, replacing `YOUR-KEY` with your Figma API key.
 
 > NOTE: You will need to create a Figma access token to use this server. Instructions on how to create a Figma API access token can be found [here](https://help.figma.com/hc/en-us/articles/8085703771159-Manage-personal-access-tokens).
 
@@ -67,9 +58,9 @@ The `figma-developer-mcp` server can be configured by adding the following to yo
 ```json
 {
   "mcpServers": {
-    "Framelink Figma MCP": {
+    "Figma MCP Server by Bao To": {
       "command": "npx",
-      "args": ["-y", "figma-developer-mcp", "--figma-api-key=YOUR-KEY", "--stdio"]
+      "args": ["-y", "@tothienbao6a0/figma-mcp-server", "--figma-api-key=YOUR-KEY", "--stdio"]
     }
   }
 }
@@ -80,68 +71,18 @@ The `figma-developer-mcp` server can be configured by adding the following to yo
 ```json
 {
   "mcpServers": {
-    "Framelink Figma MCP": {
+    "Figma MCP Server by Bao To": {
       "command": "cmd",
-      "args": ["/c", "npx", "-y", "figma-developer-mcp", "--figma-api-key=YOUR-KEY", "--stdio"]
+      "args": ["/c", "npx", "-y", "@tothienbao6a0/figma-mcp-server", "--figma-api-key=YOUR-KEY", "--stdio"]
     }
   }
 }
 ```
 
-Or you can set `FIGMA_API_KEY` and `PORT` in the `env` field.
+This will use `npx` to download and run the `@tothienbao6a0/figma-mcp-server` package from npm. The `-y` flag automatically agrees to any prompts from `npx`.
 
-If you need more information on how to configure the Framelink Figma MCP server, see the [Framelink docs](https://www.framelink.ai/docs/quickstart?utm_source=github&utm_medium=referral&utm_campaign=readme).
-
-## Star History
-
-<a href="https://star-history.com/#GLips/Figma-Context-MCP"><img src="https://api.star-history.com/svg?repos=GLips/Figma-Context-MCP&type=Date" alt="Star History Chart" width="600" /></a>
-
-## Learn More
-
-The Framelink Figma MCP server is simple but powerful. Get the most out of it by learning more at the [Framelink](https://framelink.ai?utm_source=github&utm_medium=referral&utm_campaign=readme) site.
-
-<!-- SPONSORS:LIST:START -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-
-## Sponsors
-
-### 🥇 Gold Sponsors
-
-<table>
-  <tr>
-   <td align="center"><a href="https://framelink.ai/?ref=framelink-mcp&utm_source=github&utm_medium=referral&utm_campaign=framelink-mcp"><img src="https://avatars.githubusercontent.com/u/204619719" width="180" alt="Framelink"/><br />Framelink</a></td>
-  </tr>
-</table>
-
-### 🥈 Silver Sponsors
-
-<table>
-  <tr>
-   <!-- <td align="center"><a href=""><img src="" width="150" alt="tbd"/><br />Title</a></td> -->
-  </tr>
-</table>
-
-### 🥉 Bronze Sponsors
-
-<table>
-  <tr>
-   <!-- <td align="center"><a href=""><img src="" width="120" alt="tbd"/><br />tbd</a></td>-->
-  </tr>
-</table>
-
-### 😻 Smaller Backers
-
-<table>
-  <tr>
-   <!-- <td align="center"><a href=""><img src="" width="100" alt="tbd"/><br />tbd</a></td>-->
-  </tr>
-  <tr>
-   <!-- <td align="center"><a href=""><img src="" width="100" alt="tbd"/><br />tbd</a></td>-->
-  </tr>
-</table>
-
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
-
-<!-- SPONSORS:LIST:END -->
+Alternatively, you can install the package globally first (though `npx` is often preferred for CLI tools to ensure you're using the latest version without global installs):
+```bash
+npm install -g @tothienbao6a0/figma-mcp-server
+```
+And then configure your client to use `@tothienbao6a0/figma-mcp-server` directly as the command.
