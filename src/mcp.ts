@@ -7,11 +7,12 @@ import { generateMarkdownFromSimplifiedDesign } from "./services/doc-generator.j
 import yaml from "js-yaml";
 import fs from "fs";
 import path from "path";
+import os from "os";
 import { Logger } from "./utils/logger.js";
 
 const serverInfo = {
   name: "Figma MCP Server by Bao To",
-  version: "0.2.6",
+  version: "0.2.7",
 };
 
 const serverOptions = {
@@ -177,14 +178,14 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         .describe(
           "The key of the Figma file to extract tokens from, found in the Figma file URL.",
         ),
-      outputDirName: z
+      outputFilePath: z
         .string()
         .optional()
         .describe(
-          "Optional name for the sub-directory where tokens will be saved. Defaults to 'design_tokens'.",
+          "Optional full path (including filename) where the output JSON file should be saved. If not provided, it will be saved in a temporary directory.",
         ),
     },
-    async ({ fileKey, outputDirName }) => {
+    async ({ fileKey, outputFilePath }) => {
       try {
         Logger.log(`Generating design tokens for file: ${fileKey}`);
         const simplifiedDesign = await figmaService.getFile(fileKey);
@@ -193,22 +194,32 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         const tokens = generateTokensFromSimplifiedDesign(simplifiedDesign);
         Logger.log("Design tokens generated.");
 
-        // Sanitize Figma file name for use as a local file name
+        let resolvedOutputFilePath: string;
         const safeFileNameBase = simplifiedDesign.name 
             ? simplifiedDesign.name.replace(/[\/\s<>:"\\|?*]+/g, '_') 
             : 'untitled_figma_design';
         const outputFileName = `${safeFileNameBase}_tokens.json`;
-        // Resolve path to the project's current working directory
-        const outputFilePath = path.resolve(process.cwd(), outputFileName);
 
-        fs.writeFileSync(outputFilePath, JSON.stringify(tokens, null, 2));
-        Logger.log(`Design tokens successfully generated and saved to: ${outputFilePath}`);
+        if (outputFilePath) {
+          resolvedOutputFilePath = outputFilePath;
+          const dirToEnsure = path.dirname(resolvedOutputFilePath);
+          if (!fs.existsSync(dirToEnsure)) {
+            fs.mkdirSync(dirToEnsure, { recursive: true });
+            Logger.log(`Created directory: ${dirToEnsure}`);
+          }
+        } else {
+          resolvedOutputFilePath = path.join(os.tmpdir(), outputFileName);
+          Logger.log(`outputFilePath not provided, using temporary path: ${resolvedOutputFilePath}`);
+        }
+
+        fs.writeFileSync(resolvedOutputFilePath, JSON.stringify(tokens, null, 2));
+        Logger.log(`Design tokens successfully generated and saved to: ${resolvedOutputFilePath}`);
 
         return {
           content: [
             {
               type: "text",
-              text: `Design tokens successfully generated and saved to: ${outputFilePath}`,
+              text: `Design tokens successfully generated and saved to: ${resolvedOutputFilePath}`,
             },
           ],
         };
@@ -233,14 +244,14 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         .describe(
           "The key of the Figma file to document, found in the Figma file URL.",
         ),
-      outputDirName: z
+      outputFilePath: z
         .string()
         .optional()
         .describe(
-          "Optional name for the sub-directory where the document will be saved. Defaults to 'design_system_docs'.",
+          "Optional full path (including filename) where the output Markdown file should be saved. If not provided, it will be saved in a temporary directory.",
         ),
     },
-    async ({ fileKey, outputDirName }) => {
+    async ({ fileKey, outputFilePath }) => {
       try {
         Logger.log(`Generating design system documentation for file: ${fileKey}`);
         const simplifiedDesign = await figmaService.getFile(fileKey);
@@ -248,23 +259,33 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
 
         const markdownContent = generateMarkdownFromSimplifiedDesign(simplifiedDesign);
         Logger.log("Design system documentation generated.");
-
-        // Sanitize Figma file name for use as a local file name
+        
+        let resolvedOutputFilePath: string;
         const safeFileNameBase = simplifiedDesign.name 
             ? simplifiedDesign.name.replace(/[\/\s<>:"\\|?*]+/g, '_') 
             : 'untitled_figma_design';
         const outputFileName = `${safeFileNameBase}_design_system.md`;
-        // Resolve path to the project's current working directory
-        const outputFilePath = path.resolve(process.cwd(), outputFileName);
 
-        fs.writeFileSync(outputFilePath, markdownContent);
-        Logger.log(`Design system documentation successfully generated and saved to: ${outputFilePath}`);
+        if (outputFilePath) {
+          resolvedOutputFilePath = outputFilePath;
+          const dirToEnsure = path.dirname(resolvedOutputFilePath);
+          if (!fs.existsSync(dirToEnsure)) {
+            fs.mkdirSync(dirToEnsure, { recursive: true });
+            Logger.log(`Created directory: ${dirToEnsure}`);
+          }
+        } else {
+          resolvedOutputFilePath = path.join(os.tmpdir(), outputFileName);
+          Logger.log(`outputFilePath not provided, using temporary path: ${resolvedOutputFilePath}`);
+        }
+        
+        fs.writeFileSync(resolvedOutputFilePath, markdownContent);
+        Logger.log(`Design system documentation successfully generated and saved to: ${resolvedOutputFilePath}`);
         
         return {
           content: [
             {
               type: "text",
-              text: `Design system documentation successfully generated and saved to: ${outputFilePath}`,
+              text: `Design system documentation successfully generated and saved to: ${resolvedOutputFilePath}`,
             },
           ],
         };
