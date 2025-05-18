@@ -187,20 +187,24 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
     async ({ fileKey, outputDirName }) => {
       try {
         Logger.log(`Generating design tokens for file: ${fileKey}`);
-        const simplifiedDesign = await figmaService.getFile(fileKey); // No depth needed, get full file for tokens
+        const simplifiedDesign = await figmaService.getFile(fileKey);
         Logger.log(`Successfully fetched file: ${simplifiedDesign.name}`);
 
         const tokens = generateTokensFromSimplifiedDesign(simplifiedDesign);
         Logger.log("Design tokens generated.");
 
+        const baseOutputDir = "generated_output";
+        if (!fs.existsSync(baseOutputDir)) {
+          fs.mkdirSync(baseOutputDir, { recursive: true });
+          Logger.log(`Created base directory: ${baseOutputDir}`);
+        }
+
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
         const dirName = outputDirName || "design_tokens";
-        const outputDirPath = path.join("generated_output", dirName, timestamp);
+        const outputDirPath = path.join(baseOutputDir, dirName, timestamp);
 
-        if (!fs.existsSync(outputDirPath)) {
-          fs.mkdirSync(outputDirPath, { recursive: true });
-          Logger.log(`Created directory: ${outputDirPath}`);
-        }
+        fs.mkdirSync(outputDirPath, { recursive: true });
+        Logger.log(`Created directory: ${outputDirPath}`);
 
         const outputFilePath = path.join(outputDirPath, "tokens.json");
         fs.writeFileSync(outputFilePath, JSON.stringify(tokens, null, 2));
@@ -251,14 +255,19 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         const markdownContent = generateMarkdownFromSimplifiedDesign(simplifiedDesign);
         Logger.log("Design system documentation generated.");
 
+        const baseOutputDir = "generated_output";
+        if (!fs.existsSync(baseOutputDir)) {
+          fs.mkdirSync(baseOutputDir, { recursive: true });
+          Logger.log(`Created base directory: ${baseOutputDir}`);
+        }
+
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
         const dirName = outputDirName || "design_system_docs";
-        const outputDirPath = path.join("generated_output", dirName, timestamp);
+        const outputDirPath = path.join(baseOutputDir, dirName, timestamp);
 
-        if (!fs.existsSync(outputDirPath)) {
-          fs.mkdirSync(outputDirPath, { recursive: true });
-          Logger.log(`Created directory: ${outputDirPath}`);
-        }
+        fs.mkdirSync(outputDirPath, { recursive: true });
+        Logger.log(`Created directory: ${outputDirPath}`);
+
         const outputFilePath = path.join(outputDirPath, "design_system.md");
         fs.writeFileSync(outputFilePath, markdownContent);
         Logger.log(`Design system documentation saved to: ${outputFilePath}`);
