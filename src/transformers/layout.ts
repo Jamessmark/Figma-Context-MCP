@@ -249,3 +249,66 @@ function buildSimplifiedLayoutValues(
 
   return layoutValues;
 }
+
+export function describeSimplifiedLayout(layout: SimplifiedLayout): string {
+  if (!layout) return 'No layout defined.';
+
+  const parts: string[] = [];
+
+  // Mode
+  if (layout.mode) {
+    let modeDesc = 'Arrangement: ';
+    if (layout.mode === 'row') modeDesc += 'Horizontal (Row)';
+    else if (layout.mode === 'column') modeDesc += 'Vertical (Column)';
+    else modeDesc += 'None';
+    parts.push(modeDesc + '.');
+  }
+
+  // Flex container properties (only if mode is row or column)
+  if (layout.mode === 'row' || layout.mode === 'column') {
+    if (layout.justifyContent) parts.push(`Justify Content: ${layout.justifyContent}.`);
+    if (layout.alignItems) parts.push(`Align Items: ${layout.alignItems}.`);
+    if (layout.gap) parts.push(`Item Spacing (Gap): ${layout.gap}.`);
+    if (layout.wrap) parts.push('Wrapping: Enabled.');
+  }
+
+  // Flex item property
+  if (layout.alignSelf) parts.push(`Align Self: ${layout.alignSelf}.`);
+
+  // Padding
+  if (layout.padding) {
+    parts.push(`Padding: ${layout.padding}.`); // Keeping it simple for now, could expand to describe TRBL
+  }
+
+  // Sizing
+  if (layout.sizing) {
+    const sizingParts: string[] = [];
+    if (layout.sizing.horizontal) sizingParts.push(`Horizontal: ${layout.sizing.horizontal}`);
+    if (layout.sizing.vertical) sizingParts.push(`Vertical: ${layout.sizing.vertical}`);
+    if (sizingParts.length > 0) parts.push(`Sizing: ${sizingParts.join(', ')}.`);
+  }
+
+  // Dimensions
+  if (layout.dimensions) {
+    const dimParts: string[] = [];
+    if (layout.dimensions.width !== undefined) dimParts.push(`Width: ${layout.dimensions.width}px`);
+    if (layout.dimensions.height !== undefined) dimParts.push(`Height: ${layout.dimensions.height}px`);
+    if (layout.dimensions.aspectRatio !== undefined) dimParts.push(`Aspect Ratio: ${layout.dimensions.aspectRatio}`);
+    if (dimParts.length > 0) parts.push(`Dimensions: ${dimParts.join(', ')}.`);
+  }
+  
+  // Position
+  if (layout.position) parts.push(`Positioning: ${layout.position}.`);
+  
+  // Location relative to parent (only if absolute)
+  if (layout.position === 'absolute' && layout.locationRelativeToParent) {
+    parts.push(`Offset: X: ${layout.locationRelativeToParent.x}px, Y: ${layout.locationRelativeToParent.y}px.`);
+  }
+
+  // Overflow
+  if (layout.overflowScroll && layout.overflowScroll.length > 0) {
+    parts.push(`Overflow Scroll: ${layout.overflowScroll.join(', ')}.`);
+  }
+
+  return parts.length > 0 ? parts.join(' ') : 'Basic or undefined layout properties.';
+}

@@ -12,7 +12,7 @@ import { Logger } from "./utils/logger.js";
 
 const serverInfo = {
   name: "Figma MCP Server by Bao To",
-  version: "0.3.0",
+  version: "0.3.1",
 };
 
 const serverOptions = {

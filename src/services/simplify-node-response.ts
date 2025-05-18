@@ -11,12 +11,22 @@ import { hasValue, isRectangleCornerRadii, isTruthy } from "~/utils/identity.js"
 import {
   removeEmptyKeys,
   generateVarId,
-  type StyleId,
   parsePaint,
   isVisible,
 } from "~/utils/common.js";
 import { buildSimplifiedStrokes, type SimplifiedStroke } from "~/transformers/style.js";
 import { buildSimplifiedEffects, type SimplifiedEffects } from "~/transformers/effects.js";
+
+// Placed StyleId and ComponentRendition definitions at the top and exported
+export type StyleId = string;
+
+export interface ComponentRendition {
+  name: string;
+  id: string; // Typically the component's node ID
+  description?: string;
+  // We can add more properties here later, like props, variants, etc.
+}
+
 /**
  * TODO ITEMS
  *
@@ -52,9 +62,14 @@ export type StyleTypes =
   | SimplifiedStroke
   | SimplifiedEffects
   | string;
-export type GlobalVars = {
-  styles: Record<StyleId, StyleTypes>;
-};
+export interface GlobalVars {
+  styles: {
+    [id: StyleId]: StyleTypes; // fill, text, effect, layout, stroke
+  };
+  components: Record<string, ComponentRendition>;
+  figmaPublishedStyles?: FigmaPublishedStylesMap; // Raw published styles from Figma API
+  styleIdToFigmaName?: Record<StyleId, string>; // Map our internal style ID to Figma's published name
+}
 export interface SimplifiedDesign {
   name: string;
   lastModified: string;
@@ -138,6 +153,8 @@ export function parseFigmaResponse(data: GetFileResponse | GetFileNodesResponse)
   }
   let globalVars: GlobalVars = {
     styles: {},
+    components: {},
+    styleIdToFigmaName: {}
   };
   const simplifiedNodes: SimplifiedNode[] = nodes
     .filter(isVisible)

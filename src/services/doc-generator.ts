@@ -1,6 +1,6 @@
-import type { SimplifiedDesign, GlobalVars, StyleTypes, SimplifiedFill, TextStyle, SimplifiedNode } from './simplify-node-response.js';
+import type { SimplifiedDesign, GlobalVars, StyleTypes, SimplifiedFill, TextStyle, SimplifiedNode, StyleId, ComponentRendition } from './simplify-node-response.js';
 import type { SimplifiedEffects } from '../transformers/effects.js';
-import type { SimplifiedLayout } from '../transformers/layout.js';
+import { type SimplifiedLayout, describeSimplifiedLayout } from '../transformers/layout.js';
 import type { SimplifiedStroke } from '../transformers/style.js';
 
 // Helper to sanitize strings
@@ -44,31 +44,40 @@ export function generateMarkdownFromSimplifiedDesign(design: SimplifiedDesign): 
 
     for (const styleId in styles) {
       const styleDefinition = styles[styleId as keyof GlobalVars['styles']];
-      // Extract the base name by removing the known prefix for display
-      let displayName = styleId;
-      const knownPrefixes = ["fill_", "text_", "effect_", "layout_", "stroke_"];
-      for (const p of knownPrefixes) {
-        if (styleId.startsWith(p)) {
-          displayName = styleId.substring(p.length);
-          break;
+      
+      let nameForTable: string;
+      // Prioritize human-readable name from Figma's published styles via our map
+      if (design.globalVars.styleIdToFigmaName && design.globalVars.styleIdToFigmaName[styleId as StyleId]) {
+        nameForTable = design.globalVars.styleIdToFigmaName[styleId as StyleId]!;
+      } else {
+        // Fallback: strip prefix from our internal styleId
+        let fallbackName = styleId;
+        const knownPrefixes = ["fill_", "text_", "effect_", "layout_", "stroke_"];
+        for (const p of knownPrefixes) {
+          if (styleId.startsWith(p)) {
+            fallbackName = styleId.substring(p.length);
+            break;
+          }
         }
+        nameForTable = fallbackName;
       }
 
       if (styleId.startsWith('fill_')) {
-        categorizedStyles.colors[displayName] = styleDefinition;
+        categorizedStyles.colors[nameForTable] = styleDefinition;
       } else if (styleId.startsWith('text_')) {
-        categorizedStyles.typography[displayName] = styleDefinition;
+        categorizedStyles.typography[nameForTable] = styleDefinition;
       } else if (styleId.startsWith('effect_')) {
-        categorizedStyles.effects[displayName] = styleDefinition;
+        categorizedStyles.effects[nameForTable] = styleDefinition;
       } else if (styleId.startsWith('layout_')) {
-        categorizedStyles.layout[displayName] = styleDefinition;
+        categorizedStyles.layout[nameForTable] = styleDefinition;
       } else if (styleId.startsWith('stroke_')) {
         const stroke = styleDefinition as SimplifiedStroke;
         if (stroke.colors && stroke.colors.length === 1) {
           const strokeColor = stroke.colors[0];
           // Ensure the strokeColor is a simple color before categorizing it as a color
           if (typeof strokeColor === 'string' || (typeof strokeColor === 'object' && (strokeColor.hex || strokeColor.rgba))) {
-             categorizedStyles.colors['stroke_' + displayName] = styleDefinition; // Prefix with stroke_ to differentiate
+             // Use nameForTable as the key. The 'Value' column in the table will indicate it's a border.
+             categorizedStyles.colors[nameForTable] = styleDefinition; 
           }
         }
       }
@@ -207,7 +216,7 @@ export function generateMarkdownFromSimplifiedDesign(design: SimplifiedDesign): 
       md += '|------|---------|\n';
       for (const name in categorizedStyles.layout) {
         const layout = categorizedStyles.layout[name] as SimplifiedLayout;
-        md += '| ' + s(name) + ' | ' + formatJsonBlock(layout) + ' |\n';
+        md += '| ' + s(name) + ' | ' + s(describeSimplifiedLayout(layout)) + ' |\n';
       }
       md += '\n';
     }
@@ -225,7 +234,11 @@ export function generateMarkdownFromSimplifiedDesign(design: SimplifiedDesign): 
       let nodesMd = '';
       const indent = '  '.repeat(level);
       for (const currentNode of nodesToDocument) { 
-        nodesMd += indent + '- **' + s(currentNode.name) + '** (Type: ' + s(currentNode.type) + ', ID: ' + s(currentNode.id) + ')\n';
+        let nodePrefix = '';
+        if (currentNode.type === 'COMPONENT') {
+          nodePrefix = `<a name="component-${s(currentNode.id)}"></a>**COMPONENT DEFINITION:** `;
+        }
+        nodesMd += indent + '- ' + nodePrefix + '**' + s(currentNode.name) + '** (Type: ' + s(currentNode.type) + ', ID: ' + s(currentNode.id) + ')\n';
         
         // Common properties
         if (currentNode.opacity !== undefined && currentNode.opacity !== 1) {
@@ -242,7 +255,16 @@ export function generateMarkdownFromSimplifiedDesign(design: SimplifiedDesign): 
         if (currentNode.type === 'INSTANCE') {
           let instanceText = '  - (Instance of a component.';
           if (currentNode.mainComponentId) {
-            instanceText += ` Main Component ID: ${s(currentNode.mainComponentId)}.`;
+            instanceText += ` Main Component ID: [${s(currentNode.mainComponentId)}](#component-${s(currentNode.mainComponentId)}).`;
+            // Check if main component details are available in design.globalVars.components
+            if (design.globalVars && design.globalVars.components && design.globalVars.components[currentNode.mainComponentId]) {
+              const mainComp = design.globalVars.components[currentNode.mainComponentId];
+              instanceText += ` (Main Component Name: "${s(mainComp.name)}"`;
+              if (mainComp.description) {
+                instanceText += `, Description: "${s(mainComp.description)}"`;
+              }
+              instanceText += ')';
+            }
           }
           instanceText += ' Further details depend on main component definition.)\n';
           nodesMd += indent + instanceText;
