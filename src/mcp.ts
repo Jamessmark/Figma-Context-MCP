@@ -2,7 +2,11 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FigmaService } from "./services/figma.js";
 import type { SimplifiedDesign } from "./services/simplify-node-response.js";
+import { generateTokensFromSimplifiedDesign } from "./services/token-generator.js";
+import { generateMarkdownFromSimplifiedDesign } from "./services/doc-generator.js";
 import yaml from "js-yaml";
+import fs from "fs";
+import path from "path";
 import { Logger } from "./utils/logger.js";
 
 const serverInfo = {
@@ -158,6 +162,121 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         return {
           isError: true,
           content: [{ type: "text", text: `Error downloading images: ${error}` }],
+        };
+      }
+    },
+  );
+
+  // New tool to generate design tokens
+  server.tool(
+    "generate_design_tokens",
+    "Extracts design tokens (colors, typography, spacing, effects) from a Figma file and saves them as a JSON file.",
+    {
+      fileKey: z
+        .string()
+        .describe(
+          "The key of the Figma file to extract tokens from, found in the Figma file URL.",
+        ),
+      outputDirName: z
+        .string()
+        .optional()
+        .describe(
+          "Optional name for the sub-directory where tokens will be saved. Defaults to 'design_tokens'.",
+        ),
+    },
+    async ({ fileKey, outputDirName }) => {
+      try {
+        Logger.log(`Generating design tokens for file: ${fileKey}`);
+        const simplifiedDesign = await figmaService.getFile(fileKey); // No depth needed, get full file for tokens
+        Logger.log(`Successfully fetched file: ${simplifiedDesign.name}`);
+
+        const tokens = generateTokensFromSimplifiedDesign(simplifiedDesign);
+        Logger.log("Design tokens generated.");
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const dirName = outputDirName || "design_tokens";
+        const outputDirPath = path.join("generated_output", dirName, timestamp);
+
+        if (!fs.existsSync(outputDirPath)) {
+          fs.mkdirSync(outputDirPath, { recursive: true });
+          Logger.log(`Created directory: ${outputDirPath}`);
+        }
+
+        const outputFilePath = path.join(outputDirPath, "tokens.json");
+        fs.writeFileSync(outputFilePath, JSON.stringify(tokens, null, 2));
+        Logger.log(`Design tokens saved to: ${outputFilePath}`);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Design tokens successfully generated and saved to: ${outputFilePath}`,
+            },
+          ],
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : JSON.stringify(error);
+        Logger.error(`Error generating design tokens for file ${fileKey}:`, message);
+        return {
+          isError: true,
+          content: [{ type: "text", text: `Error generating design tokens: ${message}` }],
+        };
+      }
+    },
+  );
+
+  // New tool to generate design system documentation
+  server.tool(
+    "generate_design_system_doc",
+    "Generates a comprehensive Markdown document detailing the design system from a Figma file.",
+    {
+      fileKey: z
+        .string()
+        .describe(
+          "The key of the Figma file to document, found in the Figma file URL.",
+        ),
+      outputDirName: z
+        .string()
+        .optional()
+        .describe(
+          "Optional name for the sub-directory where the document will be saved. Defaults to 'design_system_docs'.",
+        ),
+    },
+    async ({ fileKey, outputDirName }) => {
+      try {
+        Logger.log(`Generating design system documentation for file: ${fileKey}`);
+        const simplifiedDesign = await figmaService.getFile(fileKey);
+        Logger.log(`Successfully fetched file: ${simplifiedDesign.name}`);
+
+        const markdownContent = generateMarkdownFromSimplifiedDesign(simplifiedDesign);
+        Logger.log("Design system documentation generated.");
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const dirName = outputDirName || "design_system_docs";
+        const outputDirPath = path.join("generated_output", dirName, timestamp);
+
+        if (!fs.existsSync(outputDirPath)) {
+          fs.mkdirSync(outputDirPath, { recursive: true });
+          Logger.log(`Created directory: ${outputDirPath}`);
+        }
+        const outputFilePath = path.join(outputDirPath, "design_system.md");
+        fs.writeFileSync(outputFilePath, markdownContent);
+        Logger.log(`Design system documentation saved to: ${outputFilePath}`);
+        
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Design system documentation successfully generated and saved to: ${outputFilePath}`,
+            },
+          ],
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : JSON.stringify(error);
+        Logger.error(`Error generating design system documentation for file ${fileKey}:`, message);
+        return {
+          isError: true,
+          content: [{ type: "text", text: `Error generating design system documentation: ${message}` }],
         };
       }
     },

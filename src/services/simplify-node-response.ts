@@ -44,14 +44,14 @@ export type StrokeWeights = {
   bottom: number;
   left: number;
 };
-type StyleTypes =
+export type StyleTypes =
   | TextStyle
   | SimplifiedFill[]
   | SimplifiedLayout
   | SimplifiedStroke
   | SimplifiedEffects
   | string;
-type GlobalVars = {
+export type GlobalVars = {
   styles: Record<StyleId, StyleTypes>;
 };
 export interface SimplifiedDesign {
