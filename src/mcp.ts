@@ -193,7 +193,7 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         const tokens = generateTokensFromSimplifiedDesign(simplifiedDesign);
         Logger.log("Design tokens generated.");
 
-        const baseOutputDir = "generated_output";
+        const baseOutputDir = path.resolve(process.cwd(), "generated_output");
         if (!fs.existsSync(baseOutputDir)) {
           fs.mkdirSync(baseOutputDir, { recursive: true });
           Logger.log(`Created base directory: ${baseOutputDir}`);
@@ -255,7 +255,7 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         const markdownContent = generateMarkdownFromSimplifiedDesign(simplifiedDesign);
         Logger.log("Design system documentation generated.");
 
-        const baseOutputDir = "generated_output";
+        const baseOutputDir = path.resolve(process.cwd(), "generated_output");
         if (!fs.existsSync(baseOutputDir)) {
           fs.mkdirSync(baseOutputDir, { recursive: true });
           Logger.log(`Created base directory: ${baseOutputDir}`);
