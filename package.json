@@ -1,11 +1,11 @@
 {
-  "name": "figma-developer-mcp",
-  "version": "0.2.2",
-  "description": "Model Context Protocol server for Figma integration",
+  "name": "@tothienbao6a0/figma-mcp-server",
+  "version": "0.0.1",
+  "description": "A forked version of the Model Context Protocol server for Figma integration by Bao To.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "figma-developer-mcp": "dist/cli.js"
+    "@tothienbao6a0/figma-mcp-server": "dist/cli.js"
   },
   "files": [
     "dist",
@@ -39,14 +39,14 @@
   "packageManager": "pnpm@10.10.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GLips/Figma-Context-MCP.git"
+    "url": "git+https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git"
   },
   "keywords": [
     "figma",
     "mcp",
     "typescript"
   ],
-  "author": "",
+  "author": "Bao To",
   "license": "MIT",
   "dependencies": {
     "@figma/rest-api-spec": "^0.24.0",
