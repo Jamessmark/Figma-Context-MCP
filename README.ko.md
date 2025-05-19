@@ -38,9 +38,9 @@ Cursor가 Figma 디자인 데이터에 접근할 수 있을 때, 스크린샷을
 
 ## 데모
 
-[Figma 디자인 데이터로 Cursor에서 UI를 구축하는 데모 시청](https://youtu.be/6G9yb-LrEqg)
+[Figma 디자인 데이터로 Cursor에서 UI를 구축하는 데모 시청](https://youtu.be/q4eN7CPo_gE)
 
-[![비디오 시청](https://img.youtube.com/vi/6G9yb-LrEqg/maxresdefault.jpg)](https://youtu.be/6G9yb-LrEqg)
+[![비디오 시청](https://img.youtube.com/vi/q4eN7CPo_gE/maxresdefault.jpg)](https://youtu.be/q4eN7CPo_gE)
 
 ## 작동 방식
 
@@ -80,60 +80,4 @@ Cursor가 Figma 디자인 데이터에 접근할 수 있을 때, 스크린샷을
 2.  **특정 도구 요청**:
     *   기본 Figma 데이터를 얻으려면: *"[Figma 링크]에 대한 Figma 데이터를 가져오십시오."* (에이전트는 `get_figma_data`를 사용할 가능성이 높습니다).
     *   **디자인 토큰을 생성하려면**: *"'Bao To의 Figma MCP 서버'를 사용하여 [Figma 링크]에 대한 디자인 토큰을 생성하십시오."* 그러면 에이전트가 `generate_design_tokens` 도구를 호출해야 합니다.
-    *   **디자인 시스템 문서를 생성하려면**: *"'Bao To의 Figma MCP 서버'를 사용하여 [Figma 링크]에 대한 디자인 시스템 문서를 생성하십시오."* 그러면 에이전트가 `generate_design_system_doc` 도구를 호출해야 합니다.
-
-3.  **필수 매개변수 제공**:
-    *   **`fileKey`**: 항상 Figma 파일 링크를 제공하십시오. 에이전트와 서버는 `fileKey`를 추출할 수 있습니다.
-    *   **`outputDirectoryPath` (`generate_design_system_doc`의 경우) / `outputFilePath` (`generate_design_tokens`의 경우)**:
-        *   이 도구들을 사용하면 생성된 파일을 저장할 위치를 지정할 수 있습니다.
-        *   문서나 토큰을 현재 프로젝트에 직접 저장하려면(예: `/docs` 또는 `/tokens` 폴더에), 에이전트에게 다음과 같이 말하십시오:
-            *   *"[Figma 링크]에 대한 디자인 시스템 문서를 생성하고 현재 프로젝트의 `docs/design_system` 폴더에 저장하십시오."*
-            *   *"[Figma 링크]에 대한 디자인 토큰을 생성하고 JSON 파일을 현재 프로젝트의 `src/style-guide` 폴더에 `design-tokens.json`으로 저장하십시오."*
-        *   그러면 AI 에이전트가 프로젝트 하위 폴더의 절대 경로를 결정하고 해당 도구를 호출할 때 `outputDirectoryPath` 또는 `outputFilePath`로 제공해야 합니다.
-        *   경로를 지정하지 않으면 이 도구들은 출력을 시스템 임시 디렉터리(문서화된 기본 동작에 따라)에 저장하고 에이전트에게 해당 경로를 알립니다. 그러면 에이전트가 파일 검색을 도울 수 있습니다.
-
-**에이전트에 대한 예시 프롬프트:**
-
-> "AI야, Bao To의 Figma MCP 서버를 사용하여 `https://www.figma.com/design/yourFileKey/Your-Project-Name`에 대한 전체 디자인 시스템 문서를 생성해 줘. 출력물은 내 현재 프로젝트 루트 디렉터리 안에 `figma_docs`라는 새 폴더에 저장하고 싶어."
-
-구체적으로 설명함으로써 AI 에이전트가 이 서버에 올바른 매개변수로 올바른 도구 호출을 하도록 도와 개발 워크플로우에 고급 기능을 활용할 수 있습니다.
-
-## 시작하기
-
-AI 코딩 클라이언트(예: Cursor)는 이 MCP 서버를 사용하도록 구성할 수 있습니다. 클라이언트의 MCP 서버 구성 파일에 다음을 추가하고 `YOUR-KEY`를 Figma API 키로 바꾸십시오.
-
-> 참고: 이 서버를 사용하려면 Figma 액세스 토큰을 생성해야 합니다. Figma API 액세스 토큰을 생성하는 방법에 대한 지침은 [여기](https://help.figma.com/hc/en-us/articles/8085703771159-Manage-personal-access-tokens)에서 찾을 수 있습니다.
-
-### MacOS / Linux
-
-```json
-{
-  "mcpServers": {
-    "Bao To의 Figma MCP 서버": {
-      "command": "npx",
-      "args": ["-y", "@tothienbao6a0/figma-mcp-server", "--figma-api-key=YOUR-KEY", "--stdio"]
-    }
-  }
-}
-```
-
-### Windows
-
-```json
-{
-  "mcpServers": {
-    "Bao To의 Figma MCP 서버": {
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "@tothienbao6a0/figma-mcp-server", "--figma-api-key=YOUR-KEY", "--stdio"]
-    }
-  }
-}
-```
-
-이렇게 하면 `npx`를 사용하여 npm에서 `@tothienbao6a0/figma-mcp-server` 패키지를 다운로드하고 실행합니다. `-y` 플래그는 `npx`의 모든 프롬프트에 자동으로 동의합니다.
-
-또는 패키지를 먼저 전역으로 설치할 수 있습니다(CLI 도구의 경우 최신 버전을 전역 설치 없이 사용하기 위해 `npx`가 선호되는 경우가 많음):
-```bash
-npm install -g @tothienbao6a0/figma-mcp-server
-```
-그런 다음 클라이언트가 `@tothienbao6a0/figma-mcp-server`를 직접 명령으로 사용하도록 구성하십시오.
+    *   **디자인 시스템 문서를 생성하려면**: *"'Bao To의 Figma MCP 서버'를 사용하여 [Figma 링크]에 대한 디자인 시스템 문서를 생성하십시오."* 그러면 에이전트가 `
