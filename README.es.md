@@ -38,9 +38,9 @@ Cuando Cursor tiene acceso a los datos de diseño de Figma, puede ser significat
 
 ## Demostración
 
-[Vea una demostración de la creación de una interfaz de usuario en Cursor con datos de diseño de Figma](https://youtu.be/q4eN7CPo_gE)
+[Vea una demostración de la creación de una interfaz de usuario en Cursor con datos de diseño de Figma](https://youtu.be/4I4Zs2zg1Oo)
 
-[![Vea el video](https://img.youtube.com/vi/q4eN7CPo_gE/maxresdefault.jpg)](https://youtu.be/q4eN7CPo_gE)
+[![Vea el video](https://img.youtube.com/vi/4I4Zs2zg1Oo/maxresdefault.jpg)](https://youtu.be/4I4Zs2zg1Oo)
 
 ## Cómo funciona
 

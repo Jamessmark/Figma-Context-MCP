@@ -38,9 +38,9 @@ Lorsque Cursor a accès aux données de conception Figma, il peut être nettemen
 
 ## Démo
 
-[Regardez une démo de la création d'une interface utilisateur dans Cursor avec les données de conception Figma](https://youtu.be/q4eN7CPo_gE)
+[Regardez une démo de la création d'une interface utilisateur dans Cursor avec les données de conception Figma](https://youtu.be/4I4Zs2zg1Oo)
 
-[![Regardez la vidéo](https://img.youtube.com/vi/q4eN7CPo_gE/maxresdefault.jpg)](https://youtu.be/q4eN7CPo_gE)
+[![Regardez la vidéo](https://img.youtube.com/vi/4I4Zs2zg1Oo/maxresdefault.jpg)](https://youtu.be/4I4Zs2zg1Oo)
 
 ## Comment ça marche
 

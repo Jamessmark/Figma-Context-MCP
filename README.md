@@ -38,9 +38,9 @@ When Cursor has access to Figma design data, it can be significantly better at i
 
 ## Demo
 
-[Watch a demo of building a UI in Cursor with Figma design data](https://youtu.be/q4eN7CPo_gE)
+[Watch a demo of building a UI in Cursor with Figma design data](https://youtu.be/4I4Zs2zg1Oo)
 
-[![Watch the video](https://img.youtube.com/vi/q4eN7CPo_gE/maxresdefault.jpg)](https://youtu.be/q4eN7CPo_gE)
+[![Watch the video](https://img.youtube.com/vi/4I4Zs2zg1Oo/maxresdefault.jpg)](https://youtu.be/4I4Zs2zg1Oo)
 
 ## How it works
 

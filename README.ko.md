@@ -38,9 +38,9 @@ Cursor가 Figma 디자인 데이터에 접근할 수 있을 때, 스크린샷을
 
 ## 데모
 
-[Figma 디자인 데이터로 Cursor에서 UI를 구축하는 데모 시청](https://youtu.be/q4eN7CPo_gE)
+[Figma 디자인 데이터로 Cursor에서 UI를 구축하는 데모 시청](https://youtu.be/4I4Zs2zg1Oo)
 
-[![비디오 시청](https://img.youtube.com/vi/q4eN7CPo_gE/maxresdefault.jpg)](https://youtu.be/q4eN7CPo_gE)
+[![비디오 시청](https://img.youtube.com/vi/4I4Zs2zg1Oo/maxresdefault.jpg)](https://youtu.be/4I4Zs2zg1Oo)
 
 ## 작동 방식
 

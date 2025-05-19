@@ -41,9 +41,9 @@ CursorがFigmaデザインデータにアクセスできる場合、スクリー
 
 ## デモ
 
-[FigmaデザインデータでCursorでUIを構築するデモを見る](https://youtu.be/q4eN7CPo_gE)
+[FigmaデザインデータでCursorでUIを構築するデモを見る](https://youtu.be/4I4Zs2zg1Oo)
 
-[![ビデオを見る](https://img.youtube.com/vi/q4eN7CPo_gE/maxresdefault.jpg)](https://youtu.be/q4eN7CPo_gE)
+[![ビデオを見る](https://img.youtube.com/vi/4I4Zs2zg1Oo/maxresdefault.jpg)](https://youtu.be/4I4Zs2zg1Oo)
 
 ## 仕組み
 

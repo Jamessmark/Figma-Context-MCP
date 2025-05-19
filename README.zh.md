@@ -48,9 +48,9 @@
 
 ## 演示
 
-[观看使用 Figma 设计数据在 Cursor 中构建 UI 的演示](https://youtu.be/q4eN7CPo_gE)
+[观看使用 Figma 设计数据在 Cursor 中构建 UI 的演示](https://youtu.be/4I4Zs2zg1Oo)
 
-[![观看视频](https://img.youtube.com/vi/q4eN7CPo_gE/maxresdefault.jpg)](https://youtu.be/q4eN7CPo_gE)
+[![观看视频](https://img.youtube.com/vi/4I4Zs2zg1Oo/maxresdefault.jpg)](https://youtu.be/4I4Zs2zg1Oo)
 
 ## 工作原理
 

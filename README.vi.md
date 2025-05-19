@@ -38,9 +38,9 @@ Khi Cursor có quyền truy cập vào dữ liệu thiết kế Figma, nó có t
 
 ## Demo
 
-[Xem demo xây dựng giao diện người dùng trong Cursor với dữ liệu thiết kế Figma](https://youtu.be/q4eN7CPo_gE)
+[Xem demo xây dựng giao diện người dùng trong Cursor với dữ liệu thiết kế Figma](https://youtu.be/4I4Zs2zg1Oo)
 
-[![Xem video](https://img.youtube.com/vi/q4eN7CPo_gE/maxresdefault.jpg)](https://youtu.be/q4eN7CPo_gE)
+[![Xem video](https://img.youtube.com/vi/4I4Zs2zg1Oo/maxresdefault.jpg)](https://youtu.be/4I4Zs2zg1Oo)
 
 ## Cách hoạt động
 
