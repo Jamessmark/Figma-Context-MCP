@@ -12,7 +12,7 @@ import { Logger } from "./utils/logger.js";
 
 const serverInfo = {
   name: "Figma MCP Server by Bao To",
-  version: "0.3.4",
+  version: "0.3.5",
 };
 
 const serverOptions = {
@@ -263,7 +263,11 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
           resolvedOutputDirectoryPath = outputDirectoryPath;
           Logger.log(`Using provided outputDirectoryPath: ${resolvedOutputDirectoryPath}`);
         } else {
-          resolvedOutputDirectoryPath = process.cwd(); // Default to project root
+          // Assuming mcp.ts is in a subdirectory like 'src', resolve to the parent directory (project root)
+          // If mcp.ts is at the root, path.resolve(__dirname) would be the project root.
+          // For robustness, let's assume it might be in src/
+          const projectRoot = path.resolve(__dirname, '..'); 
+          resolvedOutputDirectoryPath = projectRoot;
           Logger.log(`outputDirectoryPath not provided, defaulting to project root: ${resolvedOutputDirectoryPath}. Warning: This may clutter the root directory and overwrite existing files if names conflict.`);
         }
 
