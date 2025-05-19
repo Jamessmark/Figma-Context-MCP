@@ -95,35 +95,43 @@ function generateAndSaveGlobalStylesMarkdown(design: SimplifiedDesign, globalSty
   }
 
   const styles = design.globalVars.styles;
-  const styleIdToNameMap = design.globalVars.styleIdToFigmaName || {};
+  const styleIdToNameMap = design.globalVars.styleIdToFigmaName || {}; // This map contains internalStyleId -> semanticKebabCaseName
 
-  const categorizedStyles: Record<string, Record<string, { id: StyleId, def: StyleTypes }>> = {
+  const categorizedStyles: Record<string, Record<string, { internalId: StyleId, semanticName: string, def: StyleTypes }>> = {
     colors: {},    // Includes fills and strokes that are simple colors
     typography: {},
     effects: {},
     layout: {},
-    // complexStrokes: {} // For strokes that aren't simple colors, if needed separately
   };
 
   for (const styleId in styles) {
     const styleDefinition = styles[styleId as keyof GlobalVars['styles']];
-    const nameForTable = styleIdToNameMap[styleId as StyleId] || styleId.substring(styleId.indexOf('_') + 1) || styleId;
+    // Prioritize the semantic name from our map. Fallback is less ideal but kept for safety.
+    const semanticName = styleIdToNameMap[styleId as StyleId] || 
+                       styleId.substring(styleId.indexOf('_') + 1).replace(/[^a-zA-Z0-9\-\/]/g, '-').toLowerCase() || 
+                       styleId;
+
+    // Use a consistent (kebab-case) version for table keys and display, if not already.
+    // Note: styleIdToNameMap should already store kebab-case names from simplify-node-response.
+    const displaySemanticName = semanticName; // Assuming it's already kebab-case from the map.
+
+    const dataToStore = { internalId: styleId as StyleId, semanticName: displaySemanticName, def: styleDefinition };
 
     if (styleId.startsWith('fill_')) {
-      categorizedStyles.colors[nameForTable] = { id: styleId as StyleId, def: styleDefinition };
+      categorizedStyles.colors[displaySemanticName] = dataToStore;
     } else if (styleId.startsWith('text_')) {
-      categorizedStyles.typography[nameForTable] = { id: styleId as StyleId, def: styleDefinition };
+      categorizedStyles.typography[displaySemanticName] = dataToStore;
     } else if (styleId.startsWith('effect_')) {
-      categorizedStyles.effects[nameForTable] = { id: styleId as StyleId, def: styleDefinition };
+      categorizedStyles.effects[displaySemanticName] = dataToStore;
     } else if (styleId.startsWith('layout_')) {
-      categorizedStyles.layout[nameForTable] = { id: styleId as StyleId, def: styleDefinition };
+      categorizedStyles.layout[displaySemanticName] = dataToStore;
     } else if (styleId.startsWith('stroke_')) {
       const stroke = styleDefinition as SimplifiedStroke;
-      // If it's a simple solid color stroke, add to colors, otherwise might need separate handling
       if (stroke.colors && stroke.colors.length === 1) {
         const strokeColor = stroke.colors[0];
         if (typeof strokeColor === 'string' || (typeof strokeColor === 'object' && (strokeColor.hex || strokeColor.rgba))) {
-          categorizedStyles.colors[nameForTable + ' (Border)'] = { id: styleId as StyleId, def: styleDefinition };
+          // For strokes that are simple colors, add to colors, with a modified name for clarity
+          categorizedStyles.colors[`${displaySemanticName} (Border)`] = dataToStore;
         }
       }
     }
@@ -132,10 +140,13 @@ function generateAndSaveGlobalStylesMarkdown(design: SimplifiedDesign, globalSty
   // Generate Colors.md
   let colorsMd = '## Color Styles\n\n';
   if (Object.keys(categorizedStyles.colors).length > 0) {
-    colorsMd += '| Name | ID | Value | Preview (Hex/RGBA) | Details |\n';
-    colorsMd += '|------|----|-------|--------------------|---------|\n';
-    for (const name in categorizedStyles.colors) {
-      const {id, def} = categorizedStyles.colors[name];
+    colorsMd += '| Token Name | Internal ID (Debug) | Value | Preview (Hex/RGBA) | Details |\n';
+    colorsMd += '|------------|---------------------|-------|--------------------|---------|\n';
+    for (const tokenKey in categorizedStyles.colors) { // tokenKey is displaySemanticName or displaySemanticName + " (Border)"
+      const {internalId, semanticName, def} = categorizedStyles.colors[tokenKey];
+      // Create an HTML anchor for direct linking if Markdown processor doesn't do it well for table rows/cells
+      const anchor = `<a name="${s(semanticName.replace(/\s*\(Border\)$/i, ''))}"></a>`;
+      
       if (Array.isArray(def)) { // SimplifiedFill[] from fill_ style
         const fills = def as SimplifiedFill[];
         fills.forEach((fill, index) => {
@@ -162,9 +173,12 @@ function generateAndSaveGlobalStylesMarkdown(design: SimplifiedDesign, globalSty
             valueColumn = s(fill.type || 'Complex Fill');
             detailsColumn = formatJsonBlock(fill);
           }
-          colorsMd += `| ${s(name)}${fills.length > 1 ? '-' + (index + 1) : ''} | ${s(id)} | ${valueColumn} | ${TBT}${previewColumn}${TBT} | ${detailsColumn.replace(/\n/g, '<br/>')} |\n`;
+          // For the first fill of a multi-fill style, include the anchor.
+          const displayName = fills.length > 1 ? `${tokenKey}-${index + 1}` : tokenKey;
+          const firstFillAnchor = index === 0 ? anchor : '';
+          colorsMd += `| ${firstFillAnchor}${s(displayName)} | ${s(internalId)} | ${valueColumn} | ${TBT}${previewColumn}${TBT} | ${detailsColumn.replace(/\n/g, '<br/>')} |\n`;
         });
-      } else if ((def as SimplifiedStroke).colors) { // SimplifiedStroke from stroke_ style
+      } else { // Must be a SimplifiedStroke, as per categorization logic
           const stroke = def as SimplifiedStroke;
           const strokeColorFill = stroke.colors[0];
           let valueColumn = 'Complex Stroke';
@@ -186,7 +200,7 @@ function generateAndSaveGlobalStylesMarkdown(design: SimplifiedDesign, globalSty
             valueColumn = 'Complex Border Color';
             detailsColumn += ', Color: ' + formatJsonBlock(strokeColorFill);
           }
-          colorsMd += `| ${s(name)} | ${s(id)} | ${valueColumn} | ${TBT}${previewColumn}${TBT} | ${detailsColumn.replace(/\n/g, '<br/>')} |\n`;
+          colorsMd += `| ${anchor}${s(tokenKey)} | ${s(internalId)} | ${valueColumn} | ${TBT}${previewColumn}${TBT} | ${detailsColumn.replace(/\n/g, '<br/>')} |\n`;
       }
     }
   } else { colorsMd += 'No color styles found.\n'; }
@@ -195,12 +209,13 @@ function generateAndSaveGlobalStylesMarkdown(design: SimplifiedDesign, globalSty
   // Generate Typography.md
   let typographyMd = '## Typography Styles\n\n';
   if (Object.keys(categorizedStyles.typography).length > 0) {
-    typographyMd += '| Name | ID | Font Family | Size | Weight | Line Height | Letter Spacing | Case | Align H | Align V |\n';
-    typographyMd += '|------|----|-------------|------|--------|-------------|----------------|------|---------|---------|\n';
-    for (const name in categorizedStyles.typography) {
-      const {id, def} = categorizedStyles.typography[name];
+    typographyMd += '| Token Name | Internal ID (Debug) | Font Family | Size | Weight | Line Height | Letter Spacing | Case | Align H | Align V |\n';
+    typographyMd += '|------------|---------------------|-------------|------|--------|-------------|----------------|------|---------|---------|\n';
+    for (const tokenKey in categorizedStyles.typography) { // tokenKey is displaySemanticName
+      const {internalId, semanticName, def} = categorizedStyles.typography[tokenKey];
       const style = def as TextStyle;
-      typographyMd += `| ${s(name)} | ${s(id)} | ${s(style.fontFamily) || '-'} | ${s(style.fontSize) || '-'}px | ${s(style.fontWeight) || '-'} | ${s(style.lineHeight) || '-'} | ${s(style.letterSpacing) || '-'} | ${s(style.textCase) || '-'} | ${s(style.textAlignHorizontal) || '-'} | ${s(style.textAlignVertical) || '-'} |\n`;
+      const anchor = `<a name="${s(semanticName)}"></a>`;
+      typographyMd += `| ${anchor}${s(tokenKey)} | ${s(internalId)} | ${s(style.fontFamily) || '-'} | ${s(style.fontSize) || '-'}px | ${s(style.fontWeight) || '-'} | ${s(style.lineHeight) || '-'} | ${s(style.letterSpacing) || '-'} | ${s(style.textCase) || '-'} | ${s(style.textAlignHorizontal) || '-'} | ${s(style.textAlignVertical) || '-'} |\n`;
     }
   } else { typographyMd += 'No typography styles found.\n'; }
   fs.writeFileSync(path.join(globalStylesDir, 'Typography.md'), typographyMd + '\n');
@@ -208,13 +223,15 @@ function generateAndSaveGlobalStylesMarkdown(design: SimplifiedDesign, globalSty
   // Generate Effects.md
   let effectsMd = '## Effect Styles (Shadows, Blurs)\n\n';
   if (Object.keys(categorizedStyles.effects).length > 0) {
-    effectsMd += '| Name | ID | Type | Details |\n';
-    effectsMd += '|------|----|------|---------|\n';
-    for (const name in categorizedStyles.effects) {
-      const {id, def} = categorizedStyles.effects[name];
+    effectsMd += '| Token Name | Internal ID (Debug) | Type | Details |\n';
+    effectsMd += '|------------|---------------------|------|---------|\n';
+    for (const tokenKey in categorizedStyles.effects) { // tokenKey is displaySemanticName
+      const {internalId, semanticName, def} = categorizedStyles.effects[tokenKey];
       const effectStyle = def as SimplifiedEffects;
+      const anchor = `<a name="${s(semanticName)}"></a>`;
       let typeColumn = 'Effect';
       let detailsValue = '';
+
       if (effectStyle.boxShadow) {
         typeColumn = 'Box Shadow';
         detailsValue += 'CSS: ' + TBT + 'css\nbox-shadow: ' + s(effectStyle.boxShadow) + ';\n' + TBT + '<br/>';
@@ -227,11 +244,13 @@ function generateAndSaveGlobalStylesMarkdown(design: SimplifiedDesign, globalSty
         typeColumn = (effectStyle.boxShadow || effectStyle.filter) ? 'Mixed (Multiple)' : 'Backdrop Filter';
         detailsValue += 'CSS: ' + TBT + 'css\nbackdrop-filter: ' + s(effectStyle.backdropFilter) + ';\n' + TBT + '<br/>';
       }
-      if (!detailsValue) {
+      
+      if (!detailsValue) { // Fallback if no specific properties found
         typeColumn = 'Complex Effect';
         detailsValue = formatJsonBlock(effectStyle);
       }
-      effectsMd += `| ${s(name)} | ${s(id)} | ${s(typeColumn)} | ${detailsValue.replace(/\n/g, '').replace(/<br\/>$/, '')} |\n`;
+
+      effectsMd += `| ${anchor}${s(tokenKey)} | ${s(internalId)} | ${s(typeColumn)} | ${detailsValue.replace(/\n/g, '').replace(/<br\/>$/, '')} |\n`;
     }
   } else { effectsMd += 'No effect styles found.\n'; }
   fs.writeFileSync(path.join(globalStylesDir, 'Effects.md'), effectsMd + '\n');
@@ -239,12 +258,13 @@ function generateAndSaveGlobalStylesMarkdown(design: SimplifiedDesign, globalSty
   // Generate LayoutAndSpacing.md
   let layoutMd = '## Layout & Spacing Styles\n\n';
   if (Object.keys(categorizedStyles.layout).length > 0) {
-    layoutMd += '| Name | ID | Details |\n';
-    layoutMd += '|------|----|---------|\n';
-    for (const name in categorizedStyles.layout) {
-      const {id, def} = categorizedStyles.layout[name];
+    layoutMd += '| Token Name | Internal ID (Debug) | Details |\n';
+    layoutMd += '|------------|---------------------|---------|\n';
+    for (const tokenKey in categorizedStyles.layout) { // tokenKey is displaySemanticName
+      const {internalId, semanticName, def} = categorizedStyles.layout[tokenKey];
       const layout = def as SimplifiedLayout;
-      layoutMd += `| ${s(name)} | ${s(id)} | ${s(describeSimplifiedLayout(layout))} |\n`;
+      const anchor = `<a name="${s(semanticName)}"></a>`;
+      layoutMd += `| ${anchor}${s(tokenKey)} | ${s(internalId)} | ${s(describeSimplifiedLayout(layout))} |\n`;
     }
   } else { layoutMd += 'No layout/spacing styles found.\n'; }
   fs.writeFileSync(path.join(globalStylesDir, 'LayoutAndSpacing.md'), layoutMd + '\n');
@@ -334,19 +354,28 @@ function documentNodesRecursive(nodesToDocument: SimplifiedNode[], level: number
     // Linking to global styles (adjust paths as needed)
     const relativeGlobalStylesPath = '../GlobalStyles';
     if (currentNode.textStyle) {
-      nodesMd += `${indent}  - TextStyle Ref: [${s(currentNode.textStyle)}](${relativeGlobalStylesPath}/Typography.md#${s(globalVars.styleIdToFigmaName?.[currentNode.textStyle as StyleId] || currentNode.textStyle)}) (See Typography Styles)\n`;
+      const semanticName = globalVars.styleIdToFigmaName?.[currentNode.textStyle as StyleId] || currentNode.textStyle;
+      nodesMd += `${indent}  - TextStyle Ref: [${s(semanticName)}](${relativeGlobalStylesPath}/Typography.md#${s(semanticName)}) (See Typography Styles)\n`;
     }
     if (currentNode.fills) {
-      nodesMd += `${indent}  - Fills Ref: [${s(currentNode.fills)}](${relativeGlobalStylesPath}/Colors.md#${s(globalVars.styleIdToFigmaName?.[currentNode.fills as StyleId] || currentNode.fills)}) (See Color Styles)\n`;
+      const semanticName = globalVars.styleIdToFigmaName?.[currentNode.fills as StyleId] || currentNode.fills;
+      nodesMd += `${indent}  - Fills Ref: [${s(semanticName)}](${relativeGlobalStylesPath}/Colors.md#${s(semanticName)}) (See Color Styles)\n`;
     }
     if (currentNode.strokes) {
-      nodesMd += `${indent}  - Strokes Ref: [${s(currentNode.strokes)}](${relativeGlobalStylesPath}/Colors.md#${s(globalVars.styleIdToFigmaName?.[currentNode.strokes as StyleId] || currentNode.strokes)}) (See Color Styles for Borders)\n`;
+      const semanticName = globalVars.styleIdToFigmaName?.[currentNode.strokes as StyleId] || currentNode.strokes;
+      // For strokes, the anchor in Colors.md might have " (Border)" appended if it was categorized as a color.
+      // We need to ensure the link anchor matches how it was created in generateAndSaveGlobalStylesMarkdown.
+      // The semanticName from styleIdToFigmaName is the base (e.g., 'primary-border').
+      // The anchor in Colors.md for a stroke added to colors is <a name="primary-border"></a> (without " (Border)").
+      nodesMd += `${indent}  - Strokes Ref: [${s(semanticName)}](${relativeGlobalStylesPath}/Colors.md#${s(semanticName)}) (See Color Styles for Borders)\n`;
     }
     if (currentNode.effects) {
-      nodesMd += `${indent}  - Effects Ref: [${s(currentNode.effects)}](${relativeGlobalStylesPath}/Effects.md#${s(globalVars.styleIdToFigmaName?.[currentNode.effects as StyleId] || currentNode.effects)}) (See Effect Styles)\n`;
+      const semanticName = globalVars.styleIdToFigmaName?.[currentNode.effects as StyleId] || currentNode.effects;
+      nodesMd += `${indent}  - Effects Ref: [${s(semanticName)}](${relativeGlobalStylesPath}/Effects.md#${s(semanticName)}) (See Effect Styles)\n`;
     }
     if (currentNode.layout) {
-      nodesMd += `${indent}  - Layout Style Ref: [${s(currentNode.layout)}](${relativeGlobalStylesPath}/LayoutAndSpacing.md#${s(globalVars.styleIdToFigmaName?.[currentNode.layout as StyleId] || currentNode.layout)}) (See Layout Styles)\n`;
+      const semanticName = globalVars.styleIdToFigmaName?.[currentNode.layout as StyleId] || currentNode.layout;
+      nodesMd += `${indent}  - Layout Style Ref: [${s(semanticName)}](${relativeGlobalStylesPath}/LayoutAndSpacing.md#${s(semanticName)}) (See Layout Styles)\n`;
     } else if (currentNode.type === 'FRAME' || currentNode.type === 'GROUP' || currentNode.type === 'RECTANGLE' || currentNode.type === 'COMPONENT') {
         // Output direct layout properties if not referencing a global style
         // This requires buildSimplifiedLayout to be callable for a node directly
@@ -471,7 +500,7 @@ export function generateMarkdownFromSimplifiedDesign(design: SimplifiedDesign): 
           });
         } else if ((styleDef as SimplifiedStroke).colors) { // SimplifiedStroke
             const stroke = styleDef as SimplifiedStroke;
-            const strokeColorFill = stroke.colors[0]; // This is a SimplifiedFill object/string
+            const strokeColorFill = stroke.colors[0];
             let valueColumn = 'Complex Stroke';
             let previewColumn = '-';
             let detailsColumn = 'Weight: ' + s(stroke.strokeWeight) + 'px';
