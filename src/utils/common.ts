@@ -301,11 +301,13 @@ export function parsePaint(raw: Paint): SimplifiedFill {
     };
   } else if (raw.type === "SOLID") {
     // treat as SOLID
-    const { hex, opacity } = convertColor(raw.color!, raw.opacity);
-    if (opacity === 1) {
+    const { hex, opacity: effectiveOpacity } = convertColor(raw.color!, raw.opacity);
+    // Use an epsilon for comparing opacity to 1 to handle floating point inaccuracies
+    if (Math.abs(effectiveOpacity - 1) < 0.001) { 
       return hex;
     } else {
-      return formatRGBAColor(raw.color!, opacity);
+      // Ensure formatRGBAColor receives the original color components and the calculated effectiveOpacity
+      return formatRGBAColor(raw.color!, effectiveOpacity); 
     }
   } else if (
     ["GRADIENT_LINEAR", "GRADIENT_RADIAL", "GRADIENT_ANGULAR", "GRADIENT_DIAMOND"].includes(
