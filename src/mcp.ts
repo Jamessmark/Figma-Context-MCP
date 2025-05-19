@@ -13,7 +13,7 @@ import url from "url";
 
 const serverInfo = {
   name: "Figma MCP Server by Bao To",
-  version: "0.3.7",
+  version: "0.3.8",
 };
 
 const serverOptions = {
@@ -249,7 +249,7 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         .string()
         .optional()
         .describe(
-          "Optional full path to the directory where the documentation files will be saved. If not provided, files and folders (e.g., _Overview.md, GlobalStyles/, Components/) will be generated directly in the server's working directory (project root). Warning: This can clutter the root and may overwrite existing files.",
+          "Optional full path to the directory where the documentation files should be saved. If not provided, files and folders (e.g., _Overview.md, GlobalStyles/, Components/) will be generated in a new unique directory within the system\'s temporary folder. The full path to this temporary directory will be returned in the response. To save directly into a specific project directory, this path must be provided.",
         ),
     },
     async ({ fileKey, outputDirectoryPath }) => {
@@ -259,20 +259,20 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         Logger.log(`Successfully fetched file: ${simplifiedDesign.name}`);
 
         let resolvedOutputDirectoryPath: string;
+        const safeFileNameBase = simplifiedDesign.name
+            ? simplifiedDesign.name.replace(/[/\\s<>:"\|?*]+/g, '_')
+            : 'untitled_figma_design';
         
         if (outputDirectoryPath) {
           resolvedOutputDirectoryPath = outputDirectoryPath;
           Logger.log(`Using provided outputDirectoryPath: ${resolvedOutputDirectoryPath}`);
         } else {
-          const currentFilename = url.fileURLToPath(import.meta.url);
-          const currentDirname = path.dirname(currentFilename);
-          const projectRoot = path.resolve(currentDirname, '..'); 
-          resolvedOutputDirectoryPath = projectRoot;
-          Logger.log(`outputDirectoryPath not provided, defaulting to project root: ${resolvedOutputDirectoryPath}. Warning: This may clutter the root directory and overwrite existing files if names conflict.`);
+          const tempDirName = `${safeFileNameBase}_design_system_docs_${Date.now()}`;
+          resolvedOutputDirectoryPath = path.join(os.tmpdir(), tempDirName);
+          Logger.log(`outputDirectoryPath not provided, defaulting to temporary directory: ${resolvedOutputDirectoryPath}`);
         }
 
-        // Ensure the output directory exists (especially important if a path was provided)
-        // If it's process.cwd(), this typically isn't strictly necessary but harmless.
+        // Ensure the output directory exists (especially important if a path was provided or using temp dir)
         if (!fs.existsSync(resolvedOutputDirectoryPath)) {
           fs.mkdirSync(resolvedOutputDirectoryPath, { recursive: true });
           Logger.log(`Created directory: ${resolvedOutputDirectoryPath}`);
