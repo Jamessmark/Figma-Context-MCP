@@ -10,9 +10,9 @@ import type {
 import { hasValue, isRectangleCornerRadii, isTruthy } from "~/utils/identity.js";
 import {
   removeEmptyKeys,
-  generateVarId,
   parsePaint,
   isVisible,
+  simpleHash,
 } from "~/utils/common.js";
 import { buildSimplifiedStrokes, type SimplifiedStroke } from "~/transformers/style.js";
 import { buildSimplifiedEffects, type SimplifiedEffects } from "~/transformers/effects.js";
@@ -227,28 +227,34 @@ function findOrCreateVar(
 
   // Create a new variable if it doesn't exist by value
   let newVarId: string;
+  let baseId: string;
 
   const figmaStyleName = appliedStyleId && figmaPublishedStyles && figmaPublishedStyles[appliedStyleId]?.name;
 
   if (figmaStyleName) {
     // Use kebab-cased Figma name for the ID
-    const baseId = `${prefix}_${toKebabCase(figmaStyleName)}`;
-    let potentialId = baseId;
-    if (globalVars.styles[potentialId]) {
-      let counter = 1;
-      potentialId = `${baseId}_${counter}`;
-      while (globalVars.styles[potentialId]) {
-        counter++;
-        potentialId = `${baseId}_${counter}`;
-      }
-    }
-    newVarId = potentialId;
+    baseId = `${prefix}_${toKebabCase(figmaStyleName)}`;
   } else {
-    // Fallback for unnamed styles: use a generated random ID
-    newVarId = generateVarId(prefix); 
+    // Fallback for unnamed styles: use a deterministic ID based on style content
+    const styleDefinitionString = JSON.stringify(value);
+    const contentHash = simpleHash(styleDefinitionString);
+    baseId = `${prefix}_${contentHash}`;
   }
+
+  // Ensure uniqueness if baseId already exists (can happen with name clashes or hash collisions)
+  let potentialId = baseId;
+  if (globalVars.styles[potentialId]) {
+    let counter = 1;
+    // Start with _1 if baseId itself is taken
+    potentialId = `${baseId}_${counter}`;
+    while (globalVars.styles[potentialId]) {
+      counter++;
+      potentialId = `${baseId}_${counter}`;
+    }
+  }
+  newVarId = potentialId;
   
-  globalVars.styles[newVarId as StyleId] = value;
+  globalVars.styles[newVarId] = value;
   return newVarId as StyleId;
 }
 

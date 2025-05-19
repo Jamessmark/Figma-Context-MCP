@@ -214,6 +214,28 @@ export function generateVarId(prefix: string = "var"): StyleId {
 }
 
 /**
+ * Generates a short, deterministic hash from a string.
+ * Used for creating consistent IDs for unnamed styles based on their content.
+ * @param str - The input string (e.g., JSON.stringify(styleDefinition))
+ * @returns A short (approx 6-7 char) base36 hash string.
+ */
+export function simpleHash(str: string): string {
+  let hash = 0;
+  if (str.length === 0) {
+    return "0";
+  }
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32bit integer
+  }
+  // Make it positive and convert to base36. Use substring for a fixed-ish length.
+  // Adding 'h' prefix to ensure it doesn't start with a number if all chars are numeric after tostring(36)
+  // and to differentiate it from potentially all-numeric figma names or purely random parts.
+  return 'h' + Math.abs(hash).toString(36).substring(0, 6);
+}
+
+/**
  * Generate a CSS shorthand for values that come with top, right, bottom, and left
  *
  * input: { top: 10, right: 10, bottom: 10, left: 10 }
