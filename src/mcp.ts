@@ -12,7 +12,7 @@ import { Logger } from "./utils/logger.js";
 
 const serverInfo = {
   name: "Figma MCP Server by Bao To",
-  version: "0.3.3",
+  version: "0.3.4",
 };
 
 const serverOptions = {
@@ -248,7 +248,7 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         .string()
         .optional()
         .describe(
-          "Optional full path to the directory where the Markdown files should be saved. If not provided, a directory will be created in the system's temporary folder.",
+          "Optional full path to the directory where the documentation files will be saved. If not provided, files and folders (e.g., _Overview.md, GlobalStyles/, Components/) will be generated directly in the server's working directory (project root). Warning: This can clutter the root and may overwrite existing files.",
         ),
     },
     async ({ fileKey, outputDirectoryPath }) => {
@@ -258,25 +258,23 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         Logger.log(`Successfully fetched file: ${simplifiedDesign.name}`);
 
         let resolvedOutputDirectoryPath: string;
-        const safeFileNameBase = simplifiedDesign.name
-            ? simplifiedDesign.name.replace(/[/\\s<>:"\|?*]+/g, '_')
-            : 'untitled_figma_design';
         
         if (outputDirectoryPath) {
           resolvedOutputDirectoryPath = outputDirectoryPath;
+          Logger.log(`Using provided outputDirectoryPath: ${resolvedOutputDirectoryPath}`);
         } else {
-          const tempDirName = `${safeFileNameBase}_design_system_docs_${Date.now()}`;
-          resolvedOutputDirectoryPath = path.join(os.tmpdir(), tempDirName);
-          Logger.log(`outputDirectoryPath not provided, using temporary directory: ${resolvedOutputDirectoryPath}`);
+          resolvedOutputDirectoryPath = process.cwd(); // Default to project root
+          Logger.log(`outputDirectoryPath not provided, defaulting to project root: ${resolvedOutputDirectoryPath}. Warning: This may clutter the root directory and overwrite existing files if names conflict.`);
         }
 
-        // Ensure the output directory exists
+        // Ensure the output directory exists (especially important if a path was provided)
+        // If it's process.cwd(), this typically isn't strictly necessary but harmless.
         if (!fs.existsSync(resolvedOutputDirectoryPath)) {
           fs.mkdirSync(resolvedOutputDirectoryPath, { recursive: true });
           Logger.log(`Created directory: ${resolvedOutputDirectoryPath}`);
         }
 
-        // Call the new function to generate multiple Markdown files
+        // Call the function to generate multiple Markdown files
         generateStructuredDesignSystemDocumentation(simplifiedDesign, resolvedOutputDirectoryPath);
 
         Logger.log(`Design system documentation successfully generated into directory: ${resolvedOutputDirectoryPath}`);
