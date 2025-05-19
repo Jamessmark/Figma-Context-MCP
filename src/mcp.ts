@@ -13,7 +13,7 @@ import url from "url";
 
 const serverInfo = {
   name: "Figma MCP Server by Bao To",
-  version: "0.4.8",
+  version: "0.5.3",
 };
 
 const serverOptions = {

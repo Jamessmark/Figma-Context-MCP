@@ -24,33 +24,7 @@ interface DesignTokens {
 }
 
 function categorizeStyle(styleId: string, styleDefinition: StyleTypes, globalVars?: GlobalVars): { category: keyof DesignTokens | null; name: string; token: any } {
-  let baseName: string;
-
-  if (globalVars?.styleIdToFigmaName && globalVars.styleIdToFigmaName[styleId]) {
-    baseName = globalVars.styleIdToFigmaName[styleId]!;
-  } else {
-    // Fallback: Extract the base name by removing the known prefix from styleId
-    baseName = styleId;
-    const knownPrefixes = ["fill_", "text_", "effect_", "layout_", "stroke_"];
-    for (const p of knownPrefixes) {
-      if (styleId.startsWith(p)) {
-        baseName = styleId.substring(p.length);
-        break;
-      }
-    }
-  }
-
-  // Ensure baseName is not empty, provide a default if necessary
-  if (!baseName) {
-    // This case should be rare with the new naming in simplify-node-response
-    // but as a safeguard, derive from prefix or styleId itself.
-    const prefixEnd = styleId.indexOf('_');
-    if (prefixEnd !== -1 && prefixEnd < styleId.length -1 ){
-        baseName = styleId.substring(prefixEnd + 1) || 'unnamed-token';
-    } else {
-        baseName = styleId || 'unnamed-token';
-    }
-  }
+  let baseName = styleId; // Use the styleId directly as the base for the name to be processed.
 
   let category: keyof DesignTokens | null = null;
   let token: any = { value: styleDefinition }; 
@@ -143,12 +117,12 @@ export function generateTokensFromSimplifiedDesign(simplifiedDesign: SimplifiedD
   if (simplifiedDesign.globalVars && simplifiedDesign.globalVars.styles) {
     for (const styleId in simplifiedDesign.globalVars.styles) {
       const styleDefinition = simplifiedDesign.globalVars.styles[styleId as keyof GlobalVars['styles']]; 
-      // Pass globalVars to categorizeStyle
+      // Pass globalVars (though it's not used for naming anymore in categorizeStyle with these changes)
       const { category, name, token } = categorizeStyle(styleId, styleDefinition, simplifiedDesign.globalVars);
 
       if (category && tokens[category]) {
-        // Use toKebabCase for the final token name
-        let tokenName = toKebabCase(name);
+        // Use toKebabCase for the final token name, derived from the styleId (which is passed as 'name')
+        let tokenName = toKebabCase(name); // 'name' here IS the styleId from categorizeStyle
         if (!tokenName) { // Ensure tokenName is not empty after kebab-casing
             tokenName = 'unnamed-token';
         }

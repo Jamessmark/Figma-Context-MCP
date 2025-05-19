@@ -68,7 +68,6 @@ export interface GlobalVars {
   };
   components: Record<string, ComponentRendition>;
   figmaPublishedStyles?: FigmaPublishedStylesMap; // Raw published styles from Figma API
-  styleIdToFigmaName?: Record<StyleId, string>; // Map our internal style ID to Figma's published name
 }
 export interface SimplifiedDesign {
   name: string;
@@ -154,7 +153,6 @@ export function parseFigmaResponse(data: GetFileResponse | GetFileNodesResponse)
   let globalVars: GlobalVars = {
     styles: {},
     components: {},
-    styleIdToFigmaName: {}
   };
   const simplifiedNodes: SimplifiedNode[] = nodes
     .filter(isVisible)
@@ -218,142 +216,39 @@ function findOrCreateVar(
   appliedStyleId?: string, 
   figmaPublishedStyles?: FigmaPublishedStylesMap
 ): StyleId {
-  // Check if the same value already exists
   const [existingVarIdByValue] =
     Object.entries(globalVars.styles).find(
       ([_, existingValue]) => JSON.stringify(existingValue) === JSON.stringify(value),
     ) ?? [];
 
   if (existingVarIdByValue) {
-    // If it exists by value, ensure its semantic name is in styleIdToFigmaName if not already
-    // This handles cases where a named style's value is identical to an unnamed one processed later
-    if (appliedStyleId && figmaPublishedStyles && figmaPublishedStyles[appliedStyleId]?.name && !globalVars.styleIdToFigmaName?.[existingVarIdByValue]) {
-      const figmaStyleName = figmaPublishedStyles[appliedStyleId]!.name;
-      // Using kebab-case for the semantic name stored in styleIdToFigmaName
-      globalVars.styleIdToFigmaName![existingVarIdByValue] = toKebabCase(figmaStyleName);
-    }
     return existingVarIdByValue as StyleId;
   }
 
   // Create a new variable if it doesn't exist by value
   let newVarId: string;
-  let semanticName: string | undefined = undefined; // This will be stored in styleIdToFigmaName
 
   const figmaStyleName = appliedStyleId && figmaPublishedStyles && figmaPublishedStyles[appliedStyleId]?.name;
 
   if (figmaStyleName) {
-    semanticName = toKebabCase(figmaStyleName);
-    // The actual styleId key in globalVars.styles will still include the prefix
-    // and a counter if needed for uniqueness of the *value*.
-    // The semanticName is for the token generator to use.
-    let potentialId = `${prefix}_${sanitizeNameForId(figmaStyleName)}`; // Keep original sanitize for internal ID generation
+    // Use kebab-cased Figma name for the ID
+    const baseId = `${prefix}_${toKebabCase(figmaStyleName)}`;
+    let potentialId = baseId;
     if (globalVars.styles[potentialId]) {
       let counter = 1;
-      let tempId = `${potentialId}_${counter}`;
-      while (globalVars.styles[tempId]) {
+      potentialId = `${baseId}_${counter}`;
+      while (globalVars.styles[potentialId]) {
         counter++;
-        tempId = `${potentialId}_${counter}`;
+        potentialId = `${baseId}_${counter}`;
       }
-      newVarId = tempId;
-    } else {
-      newVarId = potentialId;
     }
+    newVarId = potentialId;
   } else {
-    // Fallback for unnamed styles
-    newVarId = generateVarId(prefix); // Keep random ID for internal uniqueness of the value
-    
-    // Try to generate a more descriptive semantic name based on value type
-    if (prefix === 'fill_' && Array.isArray(value) && value.length > 0) {
-      const firstFill = value[0];
-      if (typeof firstFill === 'object' && firstFill !== null && firstFill.hex) {
-        semanticName = `hex-${firstFill.hex.replace('#', '')}`;
-        if (firstFill.opacity !== undefined && firstFill.opacity < 1) {
-          const alphaHex = Math.round(firstFill.opacity * 255).toString(16).padStart(2, '0');
-          semanticName += alphaHex;
-        }
-      } else if (typeof firstFill === 'string' && firstFill.startsWith('#')) {
-         semanticName = `hex-${firstFill.replace('#', '')}`;
-      } else if (typeof firstFill === 'string' && firstFill.startsWith('rgba')) {
-        semanticName = `rgba-${firstFill.substring(5, firstFill.length - 1).replace(/[^0-9,.]/g, '').replace(/,/g, '-').replace(/\.\d+$/, '')}`; // simplified rgba
-      } else if (typeof firstFill === 'object' && firstFill !== null && firstFill.imageRef) {
-        semanticName = `image-${firstFill.imageRef.substring(0, 8)}`; // image-abcdef12
-      } else {
-        semanticName = `${prefix.replace(/_$/, '')}-unnamed-complex`;
-      }
-    } else if (prefix === 'text_' && typeof value === 'object' && value !== null) {
-      const textStyle = value as TextStyle;
-      let parts: string[] = ['text'];
-      if (textStyle.fontFamily) parts.push(textStyle.fontFamily.toLowerCase().replace(/\s+/g, '-'));
-      if (textStyle.fontSize) parts.push(`${textStyle.fontSize}px`);
-      if (textStyle.fontWeight) parts.push(String(textStyle.fontWeight));
-      if (parts.length > 1) {
-        semanticName = parts.join('-');
-      } else {
-        semanticName = 'text-unnamed-custom';
-      }
-    } else if (prefix === 'stroke_' && typeof value === 'object' && value !== null) {
-      const strokeStyle = value as SimplifiedStroke;
-      if (strokeStyle.colors && strokeStyle.colors.length > 0) {
-        const firstColor = strokeStyle.colors[0];
-        let colorPart = 'unknown-color';
-        if (typeof firstColor === 'object' && firstColor !== null && firstColor.hex) {
-          colorPart = `hex-${firstColor.hex.replace('#', '')}`;
-          if (firstColor.opacity !== undefined && firstColor.opacity < 1) {
-            const alphaHex = Math.round(firstColor.opacity * 255).toString(16).padStart(2, '0');
-            colorPart += alphaHex;
-          }
-        } else if (typeof firstColor === 'string' && firstColor.startsWith('#')) {
-          colorPart = `hex-${firstColor.replace('#', '')}`;
-        } else if (typeof firstColor === 'string' && firstColor.startsWith('rgba')) {
-          colorPart = `rgba-${firstColor.substring(5, firstColor.length - 1).replace(/[^0-9,.]/g, '').replace(/,/g, '-').replace(/\.\d+$/, '')}`;
-        }
-        semanticName = `stroke-${colorPart}-w${strokeStyle.strokeWeight || '1px'}`;
-      } else {
-        semanticName = 'stroke-unnamed-custom';
-      }
-    } else if (prefix === 'effect_' && typeof value === 'object' && value !== null) {
-      const effectStyle = value as SimplifiedEffects;
-      if (effectStyle.boxShadow) {
-        semanticName = 'effect-box-shadow'; // Simplistic, could be improved
-      } else if (effectStyle.filter) {
-        semanticName = 'effect-filter'; // Simplistic
-      } else if (effectStyle.backdropFilter) {
-        semanticName = 'effect-backdrop-filter'; // Simplistic
-      } else {
-        semanticName = 'effect-unnamed-custom';
-      }
-    } else if (prefix === 'layout_' && typeof value === 'object' && value !== null) {
-        const layoutStyle = value as SimplifiedLayout;
-        if (layoutStyle.gap) {
-            semanticName = `layout-gap-${String(layoutStyle.gap).replace(/\s/g, '')}`;
-        } else if (layoutStyle.padding) {
-            semanticName = `layout-padding-${String(layoutStyle.padding).replace(/[^a-zA-Z0-9\-]/g, '')}`;
-        } else {
-            semanticName = 'layout-unnamed-custom';
-        }
-    }
-    // Always apply toKebabCase to the generated semanticName
-    if (semanticName) {
-        semanticName = toKebabCase(semanticName);
-    }
-
-    if (!semanticName) {
-      // If no better semantic name could be generated after attempting specifics,
-      // use a generic name based on prefix and a part of the random ID.
-      semanticName = toKebabCase(`${prefix.replace(/_$/, '')}-${newVarId.split('_').pop()?.substring(0,6) || 'fallback'}`);
-    }
+    // Fallback for unnamed styles: use a generated random ID
+    newVarId = generateVarId(prefix); 
   }
   
   globalVars.styles[newVarId as StyleId] = value;
-  if (semanticName) {
-    if (!globalVars.styleIdToFigmaName) {
-      globalVars.styleIdToFigmaName = {};
-    }
-    // Ensure the semantic name is also unique if multiple different styles resolve to the same semantic name
-    // (e.g. two different black colors, one named "black", one unnamed but also #000000)
-    // The token generator will handle final name collision (_1, _2) based on these semantic names.
-    globalVars.styleIdToFigmaName[newVarId as StyleId] = semanticName;
-  }
   return newVarId as StyleId;
 }
 
