@@ -1,5 +1,12 @@
 <div align="center">
   <h1>Servidor MCP de Figma por Bao To</h1>
+  <h2>Genera sistemas de diseño completos desde archivos Figma y construye componentes que cumplen con las especificaciones de diseño</h2>
+  <p>
+    🎨 Genera automáticamente sistemas de diseño y extrae tokens semánticos desde archivos Figma<br/>
+    🤖 Construye componentes desde sistemas de diseño completos o selecciones de marcos individuales<br/>
+    🎯 Obtén implementaciones pixel-perfect que coinciden exactamente con los diseños de Figma<br/>
+    📚 Genera automáticamente documentación de diseño completa
+  </p>
   <p>
     🌐 Disponible en:
     <a href="README.md">English</a> |

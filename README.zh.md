@@ -7,12 +7,19 @@
 
 <div align="center">
   <h1>Bao To 的 Figma MCP 服务器</h1>
+  <h2>从 Figma 文件生成完整设计系统，构建符合设计规范的组件</h2>
+  <p>
+    🎨 从 Figma 文件自动生成设计系统并提取语义化令牌<br/>
+    🤖 从完整设计系统或单个框架选择构建组件<br/>
+    🎯 实现与 Figma 设计完全匹配的像素级完美实现<br/>
+    📚 自动生成全面的设计文档
+  </p>
   <p>
     🌐 可用语言:
     <a href="README.md">English</a> |
     <a href="README.ko.md">한국어 (Korean)</a> |
     <a href="README.ja.md">日本語 (Japanese)</a> |
-    <a href="README.zh.md">中文 (Chinese)</a> |
+    <a href="README.zh.md">中文</a> |
     <a href="README.es.md">Español (Spanish)</a> |
     <a href="README.vi.md">Tiếng Việt (Vietnamese)</a> |
     <a href="README.fr.md">Français (French)</a>

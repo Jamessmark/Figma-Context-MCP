@@ -1,5 +1,12 @@
 <div align="center">
   <h1>Máy chủ Figma MCP của Bao To</h1>
+  <h2>Tạo hệ thống thiết kế hoàn chỉnh từ tệp Figma và xây dựng các thành phần tuân thủ đặc tả thiết kế</h2>
+  <p>
+    🎨 Tự động tạo hệ thống thiết kế và trích xuất token ngữ nghĩa từ tệp Figma<br/>
+    🤖 Xây dựng thành phần từ hệ thống thiết kế hoàn chỉnh hoặc lựa chọn khung riêng lẻ<br/>
+    🎯 Đạt được triển khai hoàn hảo đến từng pixel khớp chính xác với thiết kế Figma<br/>
+    📚 Tự động tạo tài liệu thiết kế toàn diện
+  </p>
   <p>
     🌐 Có sẵn bằng các ngôn ngữ:
     <a href="README.md">English</a> |

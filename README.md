@@ -1,5 +1,12 @@
 <div align="center">
   <h1>Figma MCP Server by Bao To</h1>
+  <h2>Generate Complete Design Systems from Figma Files and Build Design-Compliant Components</h2>
+  <p>
+    - Automatically generate design systems and extract semantic tokens from Figma files<br/>
+    - Build components from either complete design systems or individual frame selections<br/>
+    - Get pixel-perfect implementations that match Figma designs exactly<br/>
+    - Automatically generate comprehensive design documentation
+  </p>
   <p>
     🌐 Available in:
     <a href="README.md">English</a> |
