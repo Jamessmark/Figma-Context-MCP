@@ -3,7 +3,7 @@ import { z } from "zod";
 import { FigmaService } from "./services/figma.js";
 import type { SimplifiedDesign } from "./services/simplify-node-response.js";
 import { generateTokensFromSimplifiedDesign } from "./services/token-generator.js";
-import { generateMarkdownFromSimplifiedDesign } from "./services/doc-generator.js";
+import { generateMarkdownFromSimplifiedDesign, generateStructuredDesignSystemDocumentation } from "./services/doc-generator.js";
 import yaml from "js-yaml";
 import fs from "fs";
 import path from "path";
@@ -12,7 +12,7 @@ import { Logger } from "./utils/logger.js";
 
 const serverInfo = {
   name: "Figma MCP Server by Bao To",
-  version: "0.3.1",
+  version: "0.3.2",
 };
 
 const serverOptions = {
@@ -237,55 +237,55 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
   // New tool to generate design system documentation
   server.tool(
     "generate_design_system_doc",
-    "Generates a comprehensive Markdown document detailing the design system from a Figma file.",
+    "Generates a comprehensive set of Markdown documents detailing the design system from a Figma file into a specified directory.",
     {
       fileKey: z
         .string()
         .describe(
           "The key of the Figma file to document, found in the Figma file URL.",
         ),
-      outputFilePath: z
+      outputDirectoryPath: z
         .string()
         .optional()
         .describe(
-          "Optional full path (including filename) where the output Markdown file should be saved. If not provided, it will be saved in a temporary directory.",
+          "Optional full path to the directory where the Markdown files should be saved. If not provided, a directory will be created in the system's temporary folder.",
         ),
     },
-    async ({ fileKey, outputFilePath }) => {
+    async ({ fileKey, outputDirectoryPath }) => {
       try {
-        Logger.log(`Generating design system documentation for file: ${fileKey}`);
+        Logger.log(`Generating structured design system documentation for file: ${fileKey}`);
         const simplifiedDesign = await figmaService.getFile(fileKey);
         Logger.log(`Successfully fetched file: ${simplifiedDesign.name}`);
 
-        const markdownContent = generateMarkdownFromSimplifiedDesign(simplifiedDesign);
-        Logger.log("Design system documentation generated.");
-        
-        let resolvedOutputFilePath: string;
-        const safeFileNameBase = simplifiedDesign.name 
-            ? simplifiedDesign.name.replace(/[\/\s<>:"\\|?*]+/g, '_') 
+        let resolvedOutputDirectoryPath: string;
+        const safeFileNameBase = simplifiedDesign.name
+            ? simplifiedDesign.name.replace(/[/\\s<>:"\|?*]+/g, '_')
             : 'untitled_figma_design';
-        const outputFileName = `${safeFileNameBase}_design_system.md`;
-
-        if (outputFilePath) {
-          resolvedOutputFilePath = outputFilePath;
-          const dirToEnsure = path.dirname(resolvedOutputFilePath);
-          if (!fs.existsSync(dirToEnsure)) {
-            fs.mkdirSync(dirToEnsure, { recursive: true });
-            Logger.log(`Created directory: ${dirToEnsure}`);
-          }
-        } else {
-          resolvedOutputFilePath = path.join(os.tmpdir(), outputFileName);
-          Logger.log(`outputFilePath not provided, using temporary path: ${resolvedOutputFilePath}`);
-        }
         
-        fs.writeFileSync(resolvedOutputFilePath, markdownContent);
-        Logger.log(`Design system documentation successfully generated and saved to: ${resolvedOutputFilePath}`);
+        if (outputDirectoryPath) {
+          resolvedOutputDirectoryPath = outputDirectoryPath;
+        } else {
+          const tempDirName = `${safeFileNameBase}_design_system_docs_${Date.now()}`;
+          resolvedOutputDirectoryPath = path.join(os.tmpdir(), tempDirName);
+          Logger.log(`outputDirectoryPath not provided, using temporary directory: ${resolvedOutputDirectoryPath}`);
+        }
+
+        // Ensure the output directory exists
+        if (!fs.existsSync(resolvedOutputDirectoryPath)) {
+          fs.mkdirSync(resolvedOutputDirectoryPath, { recursive: true });
+          Logger.log(`Created directory: ${resolvedOutputDirectoryPath}`);
+        }
+
+        // Call the new function to generate multiple Markdown files
+        generateStructuredDesignSystemDocumentation(simplifiedDesign, resolvedOutputDirectoryPath);
+
+        Logger.log(`Design system documentation successfully generated into directory: ${resolvedOutputDirectoryPath}`);
         
         return {
           content: [
             {
               type: "text",
-              text: `Design system documentation successfully generated and saved to: ${resolvedOutputFilePath}`,
+              text: `Design system documentation successfully generated into directory: ${resolvedOutputDirectoryPath}`,
             },
           ],
         };
