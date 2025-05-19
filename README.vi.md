@@ -30,7 +30,7 @@
 
 <br/>
 
-> **Lưu ý:** Máy chủ này là một nhánh của máy chủ Framelink Figma MCP gốc, được xây dựng dựa trên nền tảng của nó để cung cấp các khả năng nâng cao cho quy trình làm việc thiết kế do AI điều khiển. Chúng tôi ghi nhận và đánh giá cao công việc nền tảng của nhóm Framelink ban đầu.
+> **Lưu ý:** Máy chủ này là một nhánh của máy chủ [Framelink Figma MCP server](https://www.npmjs.com/package/figma-developer-mcp) gốc, được xây dựng dựa trên nền tảng của nó để cung cấp các khả năng nâng cao cho quy trình làm việc thiết kế do AI điều khiển. Chúng tôi ghi nhận và đánh giá cao công việc nền tảng của nhóm Framelink ban đầu.
 
 Cung cấp cho [Cursor](https://cursor.sh/) và các công cụ mã hóa dựa trên AI khác quyền truy cập vào các tệp Figma của bạn bằng máy chủ [Model Context Protocol](https://modelcontextprotocol.io/introduction) này, **Máy chủ Figma MCP của Bao To**.
 

@@ -30,7 +30,7 @@
 
 <br/>
 
-> **Remarque :** Ce serveur est un fork du serveur MCP Figma original de Framelink, construit sur ses fondations pour offrir des capacités améliorées pour les flux de travail de conception pilotés par l'IA. Nous reconnaissons et apprécions le travail fondamental de l'équipe Framelink originale.
+> **Remarque :** Ce serveur est un fork du serveur MCP Figma original de [Framelink Figma MCP server](https://www.npmjs.com/package/figma-developer-mcp), construit sur ses fondations pour offrir des capacités améliorées pour les flux de travail de conception pilotés par l'IA. Nous reconnaissons et apprécions le travail fondamental de l'équipe Framelink originale.
 
 Donnez à [Cursor](https://cursor.sh/) et à d'autres outils de codage basés sur l'IA l'accès à vos fichiers Figma avec ce serveur [Model Context Protocol](https://modelcontextprotocol.io/introduction), **Serveur MCP Figma par Bao To**.
 

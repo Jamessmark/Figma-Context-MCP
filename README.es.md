@@ -30,7 +30,7 @@
 
 <br/>
 
-> **Nota:** Este servidor es una bifurcación del servidor MCP de Figma original de Framelink, construido sobre su base para ofrecer capacidades mejoradas para flujos de trabajo de diseño impulsados por IA. Reconocemos y apreciamos el trabajo fundamental del equipo original de Framelink.
+> **Nota:** Este servidor es una bifurcación del servidor MCP de Figma original de [Framelink Figma MCP server](https://www.npmjs.com/package/figma-developer-mcp), construido sobre su base para ofrecer capacidades mejoradas para flujos de trabajo de diseño impulsados por IA. Reconocemos y apreciamos el trabajo fundamental del equipo original de Framelink.
 
 Proporcione a [Cursor](https://cursor.sh/) y otras herramientas de codificación impulsadas por IA acceso a sus archivos de Figma con este servidor de [Model Context Protocol](https://modelcontextprotocol.io/introduction), **Servidor MCP de Figma por Bao To**.
 

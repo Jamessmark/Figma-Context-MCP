@@ -37,7 +37,7 @@
 
 <br/>
 
-> **请注意：** 此服务器是原始 Framelink Figma MCP 服务器的一个分支，在其基础上构建，为 AI 驱动的设计工作流程提供增强功能。我们承认并感谢原始 Framelink 团队的基础性工作。
+> **请注意：** 此服务器是原始 [Framelink Figma MCP 服务器](https://www.npmjs.com/package/figma-developer-mcp)的一个分支，在其基础上构建，为 AI 驱动的设计工作流程提供增强功能。我们承认并感谢原始 Framelink 团队的基础性工作。
 
 通过此 [Model Context Protocol](https://modelcontextprotocol.io/introduction) 服务器 **Bao To 的 Figma MCP 服务器**，为 [Cursor](https://cursor.sh/) 和其他 AI 驱动的编码工具提供 Figma 文件访问权限。
 

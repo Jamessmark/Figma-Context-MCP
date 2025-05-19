@@ -30,7 +30,7 @@
 
 <br/>
 
-> **참고:** 이 서버는 원래 Framelink Figma MCP 서버의 포크이며, AI 기반 디자인 워크플로우를 위한 향상된 기능을 제공하기 위해 해당 기반 위에 구축되었습니다. 저희는 원래 Framelink 팀의 기초 작업에 대해 인정하고 감사드립니다.
+> **참고:** 이 서버는 원래 [Framelink Figma MCP 서버](https://www.npmjs.com/package/figma-developer-mcp)의 포크이며, AI 기반 디자인 워크플로우를 위한 향상된 기능을 제공하기 위해 해당 기반 위에 구축되었습니다. 저희는 원래 Framelink 팀의 기초 작업에 대해 인정하고 감사드립니다.
 
 [Cursor](https://cursor.sh/) 및 기타 AI 기반 코딩 도구에 이 [Model Context Protocol](https://modelcontextprotocol.io/introduction) 서버인 **Bao To의 Figma MCP 서버**를 통해 Figma 파일에 대한 접근 권한을 부여하세요.
 

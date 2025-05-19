@@ -30,7 +30,7 @@
 
 <br/>
 
-> **注:** このサーバーは、元のFramelink Figma MCPサーバーのフォークであり、AI駆動の設計ワークフローのための強化された機能を提供するためにその基盤の上に構築されています。元のFramelinkチームの基礎的な作業に感謝し、敬意を表します。
+> **注:** このサーバーは、元の[Framelink Figma MCPサーバー](https://www.npmjs.com/package/figma-developer-mcp)のフォークであり、AI駆動の設計ワークフローのための強化された機能を提供するためにその基盤の上に構築されています。元のFramelinkチームの基礎的な作業に感謝し、敬意を表します。
 
 [Cursor](https://cursor.sh/)などのAI搭載コーディングツールに、この[Model Context Protocol](https://modelcontextprotocol.io/introduction)サーバーである**Bao ToによるFigma MCPサーバー**を通じてFigmaファイルへのアクセスを提供します。
 
@@ -89,7 +89,7 @@ CursorがFigmaデザインデータにアクセスできる場合、スクリー
     *   **`fileKey`**: 常にFigmaファイルリンクを提供してください。エージェントとサーバーは `fileKey` を抽出できます。
     *   **`outputDirectoryPath` (`generate_design_system_doc` の場合) / `outputFilePath` (`generate_design_tokens` の場合)**:
         *   これらのツールを使用すると、生成されたファイルを保存する場所を指定できます。
-        *   ドキュментацияやトークンを現在のプロジェクトに直接保存する場合（例：`/docs` または `/tokens` フォルダ）、エージェントに次のように指示します：
+        *   ドキュメントやトークンを現在のプロジェクトに直接保存する場合（例：`/docs` または `/tokens` フォルダ）、エージェントに次のように指示します：
             *   *「[Figmaリンク] のデザインシステムドキュментацияを生成し、現在のプロジェクトの `docs/design_system` フォルダに保存してください。」*
             *   *「[Figmaリンク] のデザイン-トークンを生成し、JSONファイルを現在のプロジェクトの `src/style-guide` フォルダに `design-tokens.json` として保存してください。」*
         *   その後、AIエージェントはプロジェクトのサブフォルダへの絶対パスを決定し、それぞれのツールを呼び出すときに `outputDirectoryPath` または `outputFilePath` として提供する必要があります。
