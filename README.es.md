@@ -137,3 +137,126 @@ Alternativamente, puedes instalar el paquete globalmente primero (aunque a menud
 npm install -g @tothienbao6a0/figma-mcp-server
 ```
 Y luego configura tu cliente para usar `@tothienbao6a0/figma-mcp-server` directamente como el comando. 
+
+## Hacer más legibles los sistemas de diseño generados
+
+Al usar este servidor MCP para generar tokens y documentación de diseño, notarás que los IDs internos de Figma (como `fill-hxq15en`) pueden hacer que el sistema sea difícil de mantener. La documentación del sistema de diseño generada es extensa, con IDs internos dispersos en múltiples archivos y secciones. Aquí hay un flujo de trabajo para transformar TODOS estos IDs en tokens semánticos:
+
+### Flujo de trabajo de mapeo semántico
+
+1. **Generar el sistema de diseño inicial**
+   - Usar el servidor MCP para generar tokens y documentación de diseño inicial
+   - Obtendrás múltiples archivos con IDs internos de Figma:
+     * JSON de tokens de diseño
+     * Variables CSS
+     * Documentación de componentes
+     * Guías de estilo
+     * Ejemplos de uso
+
+2. **Preparar captura de pantalla del sistema de colores**
+   - En Figma, navegar a la página de estilos de color
+   - Tomar una captura de pantalla clara que muestre:
+     * Todas las muestras de color
+     * Nombres y valores de colores
+     * Agrupación/jerarquía de colores
+   - Guardar la captura para referencia
+
+3. **Usar IA para crear mapeo semántico completo**
+   - En Cursor, compartir la captura del sistema de colores
+   - Pedir a la IA que realice un mapeo completo
+   - Ejemplo de prompt:
+     ```
+     "Tengo una captura de pantalla de mi sistema de colores Figma y los archivos del sistema de diseño generados.
+     Por favor, ayuda a crear un mapeo semántico para TODAS las instancias de IDs internos en toda la documentación:
+     1. Primero, analizar el sistema de colores en la imagen para entender el significado semántico de cada color
+     2. Luego, buscar en todos los archivos generados para encontrar cada instancia de cada ID interno
+     3. Crear un mapeo completo entre IDs y nombres semánticos
+     4. Actualizar TODAS las ocurrencias en:
+        - Archivos de tokens
+        - Variables CSS
+        - Documentación de componentes
+        - Ejemplos de uso
+        - Guías de estilo
+     5. Asegurar consistencia en todo el sistema de diseño
+     6. Generar documentación adicional incluyendo:
+        - Guías de uso para los tokens semánticos
+        - Ejemplos para diferentes contextos (componentes, temas)
+        - Mejores prácticas para implementación
+        - Patrones y combinaciones comunes
+        - Consideraciones de accesibilidad"
+     ```
+   - La IA:
+     * Analizará visualmente el sistema de colores
+     * Buscará TODAS las instancias de cada ID
+     * Creará un mapeo completo
+     * Actualizará cada ocurrencia en todos los archivos
+     * Mantendrá consistencia en todo
+     * Creará documentación de soporte
+
+4. **Archivos generados**
+   La IA creará/actualizará TODOS los archivos relevantes:
+   - `token-mapping.json` - Mapeo completo de ID a nombre semántico
+   - `design_variables.css` - Variables CSS actualizadas
+   - Todos los archivos de documentación con nombres semánticos
+   - Ejemplos de componentes con nuevos nombres de tokens
+   - Guías de estilo con referencias semánticas
+
+### Ejemplo de transformación completa
+
+Antes (a través de múltiples archivos):
+```css
+/* design_variables.css */
+--fill-hxq15en: #556AEB;
+--stroke-heus4w0: #B9C4FF;
+
+/* component_examples.md */
+Usar `var(--fill-hxq15en)` para acciones primarias
+Borde: 1px solid var(--stroke-heus4w0)
+
+/* style_guide.md */
+| fill-hxq15en | Azul primario | #556AEB |
+```
+
+Después:
+```css
+/* design_variables.css */
+--color-primary-500: #556AEB;
+--stroke-primary-light: #B9C4FF;
+
+/* component_examples.md */
+Usar `var(--color-primary-500)` para acciones primarias
+Borde: 1px solid var(--stroke-primary-light)
+
+/* style_guide.md */
+| color-primary-500 | Azul primario | #556AEB |
+```
+
+### Mejores prácticas
+
+1. **Captura de pantalla del sistema de colores**
+   - Asegurar que TODOS los colores sean visibles
+   - Incluir sistema de nombres completo
+   - Mostrar jerarquía completa de colores
+   - Capturar guías de uso
+
+2. **Nombres semánticos**
+   - Usar nombres consistentes basados en propósito
+   - Seguir una jerarquía clara de nombres
+   - Documentar relaciones entre colores
+   - Incluir contexto de uso
+
+3. **Actualizaciones completas**
+   - Verificar que TODAS las instancias estén actualizadas
+   - Revisar TODOS los archivos de documentación
+   - Revisar TODOS los ejemplos de componentes
+   - Validar TODAS las referencias
+
+4. **Mantenimiento**
+   - Mantener captura de pantalla actualizada
+   - Volver a ejecutar mapeo completo cuando sea necesario
+   - Verificar consistencia en TODOS los archivos
+   - Documentar cualquier anulación manual
+
+La IA también generará documentación adicional para ayudar a los desarrolladores a usar correctamente los tokens semánticos, incluyendo guías de uso y ejemplos para diferentes contextos (componentes, temas, etc.).
+
+## Contribuir 

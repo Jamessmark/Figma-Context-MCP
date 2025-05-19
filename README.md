@@ -137,3 +137,126 @@ Alternatively, you can install the package globally first (though `npx` is often
 npm install -g @tothienbao6a0/figma-mcp-server
 ```
 And then configure your client to use `@tothienbao6a0/figma-mcp-server` directly as the command.
+
+## Making Generated Design Systems More Readable
+
+When using this MCP server to generate design tokens and documentation, you'll notice that Figma's internal IDs (like `fill-hxq15en`) can make the system hard to maintain. The generated design system documentation is extensive, with internal IDs scattered across multiple files and sections. Here's a workflow to transform ALL instances of these IDs into semantic, readable tokens:
+
+### The Semantic Mapping Workflow
+
+1. **Generate Initial Design System**
+   - Use the MCP server to generate your initial design tokens and documentation
+   - You'll get multiple files with Figma's internal IDs:
+     * Design tokens JSON
+     * CSS variables
+     * Component documentation
+     * Style guides
+     * Usage examples
+
+2. **Prepare Your Color System Screenshot**
+   - In Figma, navigate to your color styles page
+   - Take a clear screenshot showing:
+     * All color swatches
+     * Color names and values
+     * Color grouping/hierarchy
+   - Save this screenshot for reference
+
+3. **Use AI to Create Comprehensive Semantic Mapping**
+   - In Cursor, share your color system screenshot
+   - Ask the AI to perform a comprehensive mapping
+   - Example prompt:
+     ```
+     "I have a screenshot of my Figma color system and the generated design system files. 
+     Please help create a semantic mapping for ALL instances of internal IDs across the entire documentation:
+     1. First, analyze the color system in the image to understand the semantic meaning of each color
+     2. Then, search through all generated files to find every instance of each internal ID
+     3. Create a complete mapping between IDs and semantic names
+     4. Update ALL occurrences in:
+        - Token files
+        - CSS variables
+        - Component documentation
+        - Usage examples
+        - Style guides
+     5. Ensure consistency across the entire design system
+     6. Generate additional documentation including:
+        - Usage guidelines for the semantic tokens
+        - Examples for different contexts (components, themes)
+        - Best practices for implementation
+        - Common patterns and combinations
+        - Accessibility considerations"
+     ```
+   - The AI will:
+     * Analyze your color system visually
+     * Search for ALL instances of each ID
+     * Create a comprehensive mapping
+     * Update every occurrence in all files
+     * Maintain consistency throughout
+     * Create supporting documentation
+
+4. **Generated Files**
+   The AI will create/update ALL relevant files:
+   - `token-mapping.json` - Complete ID to semantic name mapping
+   - `design_variables.css` - Updated CSS variables
+   - All documentation files with semantic names
+   - Component examples with new token names
+   - Style guides with semantic references
+
+### Example Comprehensive Transformation
+
+Before (across multiple files):
+```css
+/* design_variables.css */
+--fill-hxq15en: #556AEB;
+--stroke-heus4w0: #B9C4FF;
+
+/* component_examples.md */
+Use `var(--fill-hxq15en)` for primary actions
+Border: 1px solid var(--stroke-heus4w0)
+
+/* style_guide.md */
+| fill-hxq15en | Primary blue | #556AEB |
+```
+
+After:
+```css
+/* design_variables.css */
+--color-primary-500: #556AEB;
+--stroke-primary-light: #B9C4FF;
+
+/* component_examples.md */
+Use `var(--color-primary-500)` for primary actions
+Border: 1px solid var(--stroke-primary-light)
+
+/* style_guide.md */
+| color-primary-500 | Primary blue | #556AEB |
+```
+
+### Best Practices
+
+1. **Color System Screenshot**
+   - Ensure ALL colors are visible
+   - Include complete naming system
+   - Show full color hierarchy
+   - Capture any usage guidelines
+
+2. **Semantic Naming**
+   - Use consistent, purpose-based names
+   - Follow a clear naming hierarchy
+   - Document relationships between colors
+   - Include usage context
+
+3. **Comprehensive Updates**
+   - Verify ALL instances are updated
+   - Check ALL documentation files
+   - Review ALL component examples
+   - Validate ALL references
+
+4. **Maintenance**
+   - Keep screenshot up to date
+   - Re-run complete mapping when needed
+   - Verify consistency across ALL files
+   - Document any manual overrides
+
+The AI will also generate additional documentation to help developers use the semantic tokens correctly, including usage guidelines and examples for different contexts (components, themes, etc.).
+
+## Contributing

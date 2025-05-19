@@ -137,3 +137,126 @@ Ngoài ra, bạn có thể cài đặt gói trên toàn cầu trước (mặc d�
 npm install -g @tothienbao6a0/figma-mcp-server
 ```
 Và sau đó định cấu hình ứng dụng khách của bạn để sử dụng trực tiếp `@tothienbao6a0/figma-mcp-server` làm lệnh. 
+
+## Làm cho hệ thống thiết kế được tạo ra dễ đọc hơn
+
+Khi sử dụng máy chủ MCP này để tạo token thiết kế và tài liệu, bạn sẽ nhận thấy các ID nội bộ của Figma (như `fill-hxq15en`) có thể làm cho hệ thống khó bảo trì. Tài liệu hệ thống thiết kế được tạo ra rất rộng, với các ID nội bộ phân tán trong nhiều tệp và phần. Dưới đây là quy trình làm việc để chuyển đổi TẤT CẢ các ID này thành các token có ý nghĩa:
+
+### Quy trình ánh xạ ngữ nghĩa
+
+1. **Tạo hệ thống thiết kế ban đầu**
+   - Sử dụng máy chủ MCP để tạo token thiết kế và tài liệu ban đầu
+   - Bạn sẽ nhận được nhiều tệp với ID nội bộ của Figma:
+     * JSON token thiết kế
+     * Biến CSS
+     * Tài liệu thành phần
+     * Hướng dẫn phong cách
+     * Ví dụ sử dụng
+
+2. **Chuẩn bị ảnh chụp màn hình hệ thống màu**
+   - Trong Figma, điều hướng đến trang kiểu màu
+   - Chụp ảnh màn hình rõ ràng hiển thị:
+     * Tất cả mẫu màu
+     * Tên và giá trị màu
+     * Nhóm/phân cấp màu
+   - Lưu ảnh chụp để tham khảo
+
+3. **Sử dụng AI để tạo ánh xạ ngữ nghĩa toàn diện**
+   - Trong Cursor, chia sẻ ảnh chụp hệ thống màu
+   - Yêu cầu AI thực hiện ánh xạ toàn diện
+   - Ví dụ prompt:
+     ```
+     "Tôi có ảnh chụp màn hình hệ thống màu Figma và các tệp hệ thống thiết kế được tạo ra.
+     Vui lòng giúp tạo ánh xạ ngữ nghĩa cho TẤT CẢ các phiên bản ID nội bộ trong toàn bộ tài liệu:
+     1. Đầu tiên, phân tích hệ thống màu trong hình ảnh để hiểu ý nghĩa ngữ nghĩa của từng màu
+     2. Sau đó, tìm kiếm trong tất cả các tệp được tạo ra để tìm mọi phiên bản của từng ID nội bộ
+     3. Tạo ánh xạ hoàn chỉnh giữa ID và tên ngữ nghĩa
+     4. Cập nhật TẤT CẢ các lần xuất hiện trong:
+        - Tệp token
+        - Biến CSS
+        - Tài liệu thành phần
+        - Ví dụ sử dụng
+        - Hướng dẫn phong cách
+     5. Đảm bảo tính nhất quán trong toàn bộ hệ thống thiết kế
+     6. Tạo tài liệu bổ sung bao gồm:
+        - Hướng dẫn sử dụng token ngữ nghĩa
+        - Ví dụ cho các ngữ cảnh khác nhau (thành phần, chủ đề)
+        - Thực hành tốt nhất cho việc triển khai
+        - Mẫu và kết hợp phổ biến
+        - Cân nhắc về khả năng truy cập"
+     ```
+   - AI sẽ:
+     * Phân tích trực quan hệ thống màu
+     * Tìm kiếm TẤT CẢ các phiên bản của mỗi ID
+     * Tạo ánh xạ toàn diện
+     * Cập nhật mọi lần xuất hiện trong tất cả các tệp
+     * Duy trì tính nhất quán tổng thể
+     * Tạo tài liệu hỗ trợ
+
+4. **Tệp được tạo ra**
+   AI sẽ tạo/cập nhật TẤT CẢ các tệp liên quan:
+   - `token-mapping.json` - Ánh xạ hoàn chỉnh từ ID sang tên ngữ nghĩa
+   - `design_variables.css` - Biến CSS đã cập nhật
+   - Tất cả tệp tài liệu với tên ngữ nghĩa
+   - Ví dụ thành phần với tên token mới
+   - Hướng dẫn phong cách với tham chiếu ngữ nghĩa
+
+### Ví dụ chuyển đổi toàn diện
+
+Trước (qua nhiều tệp):
+```css
+/* design_variables.css */
+--fill-hxq15en: #556AEB;
+--stroke-heus4w0: #B9C4FF;
+
+/* component_examples.md */
+Sử dụng `var(--fill-hxq15en)` cho hành động chính
+Viền: 1px solid var(--stroke-heus4w0)
+
+/* style_guide.md */
+| fill-hxq15en | Màu xanh chính | #556AEB |
+```
+
+Sau:
+```css
+/* design_variables.css */
+--color-primary-500: #556AEB;
+--stroke-primary-light: #B9C4FF;
+
+/* component_examples.md */
+Sử dụng `var(--color-primary-500)` cho hành động chính
+Viền: 1px solid var(--stroke-primary-light)
+
+/* style_guide.md */
+| color-primary-500 | Màu xanh chính | #556AEB |
+```
+
+### Thực hành tốt nhất
+
+1. **Ảnh chụp màn hình hệ thống màu**
+   - Đảm bảo TẤT CẢ màu đều hiển thị
+   - Bao gồm hệ thống đặt tên đầy đủ
+   - Hiển thị phân cấp màu đầy đủ
+   - Chụp hướng dẫn sử dụng
+
+2. **Đặt tên ngữ nghĩa**
+   - Sử dụng tên nhất quán, dựa trên mục đích
+   - Tuân theo phân cấp đặt tên rõ ràng
+   - Ghi lại mối quan hệ giữa các màu
+   - Bao gồm ngữ cảnh sử dụng
+
+3. **Cập nhật toàn diện**
+   - Xác minh TẤT CẢ phiên bản đã được cập nhật
+   - Kiểm tra TẤT CẢ tệp tài liệu
+   - Xem xét TẤT CẢ ví dụ thành phần
+   - Xác thực TẤT CẢ tham chiếu
+
+4. **Bảo trì**
+   - Giữ ảnh chụp màn hình cập nhật
+   - Chạy lại ánh xạ hoàn chỉnh khi cần
+   - Xác minh tính nhất quán trong TẤT CẢ tệp
+   - Ghi lại mọi ghi đè thủ công
+
+AI cũng sẽ tạo tài liệu bổ sung để giúp nhà phát triển sử dụng token ngữ nghĩa một cách chính xác, bao gồm hướng dẫn sử dụng và ví dụ cho các ngữ cảnh khác nhau (thành phần, chủ đề, v.v.).
+
+## Đóng góp 

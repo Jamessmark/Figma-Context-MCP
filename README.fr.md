@@ -137,3 +137,126 @@ Alternativement, vous pouvez d'abord installer le package globalement (bien que 
 npm install -g @tothienbao6a0/figma-mcp-server
 ```
 Et configurez ensuite votre client pour qu'il utilise `@tothienbao6a0/figma-mcp-server` directement comme commande. 
+
+## Rendre les systèmes de design générés plus lisibles
+
+Lors de l'utilisation de ce serveur MCP pour générer des tokens de design et de la documentation, vous remarquerez que les ID internes de Figma (comme `fill-hxq15en`) peuvent rendre le système difficile à maintenir. La documentation du système de design générée est vaste, avec des ID internes dispersés dans plusieurs fichiers et sections. Voici un flux de travail pour transformer TOUS ces ID en tokens sémantiques :
+
+### Flux de travail de mappage sémantique
+
+1. **Générer le système de design initial**
+   - Utiliser le serveur MCP pour générer les tokens de design et la documentation initiale
+   - Vous obtiendrez plusieurs fichiers avec des ID internes Figma :
+     * JSON des tokens de design
+     * Variables CSS
+     * Documentation des composants
+     * Guides de style
+     * Exemples d'utilisation
+
+2. **Préparer la capture d'écran du système de couleurs**
+   - Dans Figma, naviguer vers la page des styles de couleurs
+   - Prendre une capture d'écran claire montrant :
+     * Tous les échantillons de couleurs
+     * Noms et valeurs des couleurs
+     * Groupement/hiérarchie des couleurs
+   - Sauvegarder la capture pour référence
+
+3. **Utiliser l'IA pour créer un mappage sémantique complet**
+   - Dans Cursor, partager la capture du système de couleurs
+   - Demander à l'IA d'effectuer un mappage complet
+   - Exemple de prompt :
+     ```
+     "J'ai une capture d'écran de mon système de couleurs Figma et les fichiers du système de design générés.
+     Veuillez aider à créer un mappage sémantique pour TOUTES les instances d'ID internes dans toute la documentation :
+     1. D'abord, analyser le système de couleurs dans l'image pour comprendre la signification sémantique de chaque couleur
+     2. Ensuite, rechercher dans tous les fichiers générés pour trouver chaque instance de chaque ID interne
+     3. Créer un mappage complet entre les ID et les noms sémantiques
+     4. Mettre à jour TOUTES les occurrences dans :
+        - Fichiers de tokens
+        - Variables CSS
+        - Documentation des composants
+        - Exemples d'utilisation
+        - Guides de style
+     5. Assurer la cohérence dans tout le système de design
+     6. Générer une documentation supplémentaire incluant :
+        - Directives d'utilisation des tokens sémantiques
+        - Exemples pour différents contextes (composants, thèmes)
+        - Meilleures pratiques pour l'implémentation
+        - Motifs et combinaisons courants
+        - Considérations d'accessibilité"
+     ```
+   - L'IA va :
+     * Analyser visuellement le système de couleurs
+     * Rechercher TOUTES les instances de chaque ID
+     * Créer un mappage complet
+     * Mettre à jour chaque occurrence dans tous les fichiers
+     * Maintenir la cohérence globale
+     * Créer la documentation de support
+
+4. **Fichiers générés**
+   L'IA créera/mettra à jour TOUS les fichiers pertinents :
+   - `token-mapping.json` - Mappage complet des ID vers les noms sémantiques
+   - `design_variables.css` - Variables CSS mises à jour
+   - Tous les fichiers de documentation avec des noms sémantiques
+   - Exemples de composants avec les nouveaux noms de tokens
+   - Guides de style avec références sémantiques
+
+### Exemple de transformation complète
+
+Avant (à travers plusieurs fichiers) :
+```css
+/* design_variables.css */
+--fill-hxq15en: #556AEB;
+--stroke-heus4w0: #B9C4FF;
+
+/* component_examples.md */
+Utiliser `var(--fill-hxq15en)` pour les actions primaires
+Bordure : 1px solid var(--stroke-heus4w0)
+
+/* style_guide.md */
+| fill-hxq15en | Bleu primaire | #556AEB |
+```
+
+Après :
+```css
+/* design_variables.css */
+--color-primary-500: #556AEB;
+--stroke-primary-light: #B9C4FF;
+
+/* component_examples.md */
+Utiliser `var(--color-primary-500)` pour les actions primaires
+Bordure : 1px solid var(--stroke-primary-light)
+
+/* style_guide.md */
+| color-primary-500 | Bleu primaire | #556AEB |
+```
+
+### Meilleures pratiques
+
+1. **Capture d'écran du système de couleurs**
+   - S'assurer que TOUTES les couleurs sont visibles
+   - Inclure le système de nommage complet
+   - Montrer la hiérarchie complète des couleurs
+   - Capturer les directives d'utilisation
+
+2. **Nommage sémantique**
+   - Utiliser des noms cohérents basés sur l'objectif
+   - Suivre une hiérarchie de nommage claire
+   - Documenter les relations entre les couleurs
+   - Inclure le contexte d'utilisation
+
+3. **Mises à jour complètes**
+   - Vérifier que TOUTES les instances sont mises à jour
+   - Vérifier TOUS les fichiers de documentation
+   - Examiner TOUS les exemples de composants
+   - Valider TOUTES les références
+
+4. **Maintenance**
+   - Garder la capture d'écran à jour
+   - Réexécuter le mappage complet si nécessaire
+   - Vérifier la cohérence dans TOUS les fichiers
+   - Documenter toute substitution manuelle
+
+L'IA générera également une documentation supplémentaire pour aider les développeurs à utiliser correctement les tokens sémantiques, y compris des directives d'utilisation et des exemples pour différents contextes (composants, thèmes, etc.).
+
+## Contribuer 
