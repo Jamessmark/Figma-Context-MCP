@@ -5,6 +5,16 @@ import type { SimplifiedLayout } from '../transformers/layout.js';
 import type { SimplifiedStroke } from '../transformers/style.js';
 import type { SimplifiedEffects } from '../transformers/effects.js';
 
+// Add toKebabCase utility function
+function toKebabCase(name: string): string {
+  if (!name) return '';
+  return name
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2') // Separate camelCase
+    .replace(/[^a-zA-Z0-9\-]+/g, '-')      // Replace non-alphanumeric with hyphen
+    .replace(/^-+|-+$/g, '')             // Remove leading/trailing hyphens
+    .toLowerCase();
+}
+
 interface DesignTokens {
   colors: Record<string, string | { value: string | string[]; type: string; [key: string]: any }>;
   typography: Record<string, { value: TextStyle; type: string; [key: string]: any }>;
@@ -13,14 +23,32 @@ interface DesignTokens {
   // Add other token categories as needed (e.g., borderRadius, borderWidths, etc.)
 }
 
-function categorizeStyle(styleId: string, styleDefinition: StyleTypes): { category: keyof DesignTokens | null; name: string; token: any } {
-  // Extract the base name by removing the known prefix
-  let name = styleId; // Default to full styleId if no known prefix is matched
-  const knownPrefixes = ["fill_", "text_", "effect_", "layout_", "stroke_"];
-  for (const p of knownPrefixes) {
-    if (styleId.startsWith(p)) {
-      name = styleId.substring(p.length);
-      break;
+function categorizeStyle(styleId: string, styleDefinition: StyleTypes, globalVars?: GlobalVars): { category: keyof DesignTokens | null; name: string; token: any } {
+  let baseName: string;
+
+  if (globalVars?.styleIdToFigmaName && globalVars.styleIdToFigmaName[styleId]) {
+    baseName = globalVars.styleIdToFigmaName[styleId]!;
+  } else {
+    // Fallback: Extract the base name by removing the known prefix from styleId
+    baseName = styleId;
+    const knownPrefixes = ["fill_", "text_", "effect_", "layout_", "stroke_"];
+    for (const p of knownPrefixes) {
+      if (styleId.startsWith(p)) {
+        baseName = styleId.substring(p.length);
+        break;
+      }
+    }
+  }
+
+  // Ensure baseName is not empty, provide a default if necessary
+  if (!baseName) {
+    // This case should be rare with the new naming in simplify-node-response
+    // but as a safeguard, derive from prefix or styleId itself.
+    const prefixEnd = styleId.indexOf('_');
+    if (prefixEnd !== -1 && prefixEnd < styleId.length -1 ){
+        baseName = styleId.substring(prefixEnd + 1) || 'unnamed-token';
+    } else {
+        baseName = styleId || 'unnamed-token';
     }
   }
 
@@ -101,7 +129,7 @@ function categorizeStyle(styleId: string, styleDefinition: StyleTypes): { catego
     }
   }
 
-  return { category, name, token };
+  return { category, name: baseName, token };
 }
 
 export function generateTokensFromSimplifiedDesign(simplifiedDesign: SimplifiedDesign): DesignTokens {
@@ -115,13 +143,20 @@ export function generateTokensFromSimplifiedDesign(simplifiedDesign: SimplifiedD
   if (simplifiedDesign.globalVars && simplifiedDesign.globalVars.styles) {
     for (const styleId in simplifiedDesign.globalVars.styles) {
       const styleDefinition = simplifiedDesign.globalVars.styles[styleId as keyof GlobalVars['styles']]; 
-      const { category, name, token } = categorizeStyle(styleId, styleDefinition);
+      // Pass globalVars to categorizeStyle
+      const { category, name, token } = categorizeStyle(styleId, styleDefinition, simplifiedDesign.globalVars);
 
       if (category && tokens[category]) {
-        let tokenName = name;
+        // Use toKebabCase for the final token name
+        let tokenName = toKebabCase(name);
+        if (!tokenName) { // Ensure tokenName is not empty after kebab-casing
+            tokenName = 'unnamed-token';
+        }
+
         let counter = 1;
+        const originalTokenName = tokenName; // Keep original for incrementing
         while(tokens[category]?.[tokenName]){
-            tokenName = `${name}_${counter}`;
+            tokenName = `${originalTokenName}-${counter}`;
             counter++;
         }
         tokens[category][tokenName] = token;
