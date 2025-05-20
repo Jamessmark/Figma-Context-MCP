@@ -65,7 +65,14 @@ describe("Figma MCP Server Tests", () => {
         CallToolResultSchema,
       );
 
-      const content = result.content[0].text as string;
+      expect(result.content).toBeDefined();
+      expect(result.content?.length).toBeGreaterThan(0);
+      expect(result.content?.[0].type).toBe('text');
+
+      const textContent = result.content?.[0]?.text;
+      expect(textContent).toBeDefined();
+
+      const content = textContent as string;
       const parsed = yaml.load(content);
 
       expect(parsed).toBeDefined();
