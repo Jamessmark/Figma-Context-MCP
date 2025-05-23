@@ -60,12 +60,41 @@ Cursor가 Figma 디자인 데이터에 접근할 수 있을 때, 스크린샷을
 
 모델에 제공되는 컨텍스트의 양을 줄이면 AI의 정확도를 높이고 응답을 더 관련성 있게 만드는 데 도움이 됩니다.
 
+## 플랜 제한사항
+
+⚠️ **Figma Variables API에 대한 중요 안내**
+
+`get_figma_variables` 기능은 **Figma Enterprise 플랜**이 필요합니다. 이 제한은 이 MCP 서버가 아닌 Figma에서 부과한 것입니다:
+
+- ✅ **모든 플랜에서 사용 가능**: `get_figma_data`, `download_figma_images`, `generate_design_tokens`, `generate_design_system_doc`
+- ❌ **Enterprise 전용**: `get_figma_variables` (Variables REST API 접근)
+
+**이 제한이 존재하는 이유:**
+- Figma는 Variables API 접근을 Enterprise 플랜에서만 제한합니다
+- Starter, Professional, 또는 Organization 플랜 사용자는 `403 Forbidden` 오류를 받게 됩니다
+- 이는 Enterprise 매출을 촉진하기 위한 Figma의 비즈니스 결정입니다
+
+**비 Enterprise 사용자를 위한 대안:**
+- `generate_design_tokens` 사용 - 디자인에서 유사한 스타일링 정보를 추출합니다
+- Figma의 Plugin API 사용 (커스텀 플러그인 개발 필요)
+- Figma UI에서 수동으로 변수 내보내기
+
+자세한 내용은 [플랜 기능에 대한 Figma 공식 문서](https://help.figma.com/hc/en-us/articles/360040328273-Figma-plans-and-features)를 참조하세요.
+
 ## 주요 기능 및 장점
 
 다른 Figma MCP 서버는 기본적인 노드 정보를 제공할 수 있지만, **Bao To의 Figma MCP 서버**는 디자인 시스템을 이해하고 활용하는 데 있어 뛰어난 기능을 제공합니다:
 
 *   **포괄적인 디자인 데이터 추출 (`get_figma_data`)**: Figma 파일 또는 특정 노드에 대한 자세한 정보를 가져와 복잡한 Figma 구조를 AI가 이해하기 쉬운 형식으로 단순화합니다.
 *   **정확한 이미지 다운로드 (`download_figma_images`)**: Figma 파일에서 특정 이미지 에셋(SVG, PNG)을 선택적으로 다운로드할 수 있습니다.
+*   ⭐ **Figma Variables 추출 (`get_figma_variables`)** ⚠️ **Figma Enterprise 플랜 필요**:
+    *   Figma의 Variables API를 사용하여 Figma 파일에서 모든 변수와 변수 컬렉션을 직접 검색합니다.
+    *   **⚠️ 중요**: 이 기능은 **Figma Enterprise 플랜**에서만 작동합니다. Starter, Professional, 또는 Organization 플랜 사용자는 REST API를 통해 변수에 접근하려고 할 때 403 Forbidden 오류를 받게 됩니다.
+    *   Variables는 다양한 모드/테마로 색상, 숫자, 문자열, 불린을 저장할 수 있는 Figma의 동적 값 시스템입니다.
+    *   디자인 토큰과의 차이: Variables는 동적이고 모드 인식 값을 생성하기 위한 특정 Figma 기능이며, 디자인 토큰은 디자인에서 추출된 스타일 값입니다.
+    *   로컬 변수(파일의 모든 변수)와 게시된 변수(팀 라이브러리에 게시된 변수) 모두 지원합니다.
+    *   변수 컬렉션, 모드, 각 모드의 값을 보여주는 구조화된 데이터를 출력합니다.
+    *   **대안**: 비 Enterprise 사용자의 경우 모든 Figma 플랜에서 작동하는 유사한 스타일링 정보를 추출하는 `generate_design_tokens` 기능을 사용하세요.
 *   ⭐ **자동화된 디자인 토큰 생성 (`generate_design_tokens`)**:
     *   Figma 파일에서 직접 중요한 디자인 토큰(색상, 타이포그래피, 간격, 효과)을 추출합니다.
     *   구조화된 JSON 파일을 출력하여 개발 워크플로우에 통합하거나 AI가 디자인 일관성을 보장하는 데 사용할 수 있도록 합니다.
@@ -86,6 +115,7 @@ Cursor가 Figma 디자인 데이터에 접근할 수 있을 때, 스크린샷을
 
 2.  **특정 도구 요청**:
     *   기본 Figma 데이터를 얻으려면: *"[Figma 링크]에 대한 Figma 데이터를 가져오십시오."* (에이전트는 `get_figma_data`를 사용할 가능성이 높습니다).
+    *   **Figma variables를 얻으려면** ⚠️ **Enterprise 전용**: *"'Bao To의 Figma MCP 서버'를 사용하여 [Figma 링크]에서 변수를 가져오십시오."* 그러면 에이전트가 `get_figma_variables` 도구를 호출해야 합니다. **참고**: 이는 Figma Enterprise 플랜에서만 작동합니다.
     *   **디자인 토큰을 생성하려면**: *"'Bao To의 Figma MCP 서버'를 사용하여 [Figma 링크]에 대한 디자인 토큰을 생성하십시오."* 그러면 에이전트가 `generate_design_tokens` 도구를 호출해야 합니다.
     *   **디자인 시스템 문서를 생성하려면**: *"'Bao To의 Figma MCP 서버'를 사용하여 [Figma 링크]에 대한 디자인 시스템 문서를 생성하십시오."* 그러면 에이전트가 `generate_design_system_doc` 도구를 호출해야 합니다.
 

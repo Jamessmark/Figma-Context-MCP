@@ -58,14 +58,43 @@ Cuando Cursor tiene acceso a los datos de diseño de Figma, puede ser significat
 
 Este servidor MCP está diseñado para simplificar y traducir las respuestas de la [API de Figma](https://www.figma.com/developers/api) para que solo se proporcione al modelo de IA la información de diseño y estilo más relevante.
 
-Reducir la cantidad de contexto proporcionado al modelo ayuda diffusing que la IA sea más precisa y las respuestas más relevantes.
+Reducir la cantidad de contexto proporcionado al modelo ayuda a hacer que la IA sea más precisa y las respuestas más relevantes.
+
+## Limitaciones del Plan
+
+⚠️ **Nota Importante sobre la API de Variables de Figma**
+
+La función `get_figma_variables` requiere un **plan Enterprise de Figma**. Esta limitación es impuesta por Figma, no por este servidor MCP:
+
+- ✅ **Disponible en TODOS los planes**: `get_figma_data`, `download_figma_images`, `generate_design_tokens`, `generate_design_system_doc`
+- ❌ **Solo Enterprise**: `get_figma_variables` (acceso a la API REST de Variables)
+
+**Por qué existe esta limitación:**
+- Figma restringe el acceso a la API de Variables solo a planes Enterprise
+- Los usuarios de planes Starter, Professional u Organization recibirán errores `403 Forbidden`
+- Esta es una decisión comercial de Figma para impulsar las ventas de Enterprise
+
+**Alternativas para usuarios no Enterprise:**
+- Usar `generate_design_tokens` - extrae información de estilo similar de sus diseños
+- Usar la API de Plugin de Figma (requiere construir un plugin personalizado)
+- Exportar variables manualmente desde la UI de Figma
+
+Para más detalles, vea la [documentación oficial de Figma sobre características de planes](https://help.figma.com/hc/en-us/articles/360040328273-Figma-plans-and-features).
 
 ## Características Clave y Ventajas
 
-Si bien otros servidores MCP de Figma pueden proporcionar información básica de nodos, el **Servidor MCP de Figma por Bao To** ofrece capacidades superiores para comprender y utilizar su sistema de diseño:
+Mientras que otros servidores MCP de Figma pueden proporcionar información básica de nodos, **el Servidor MCP de Figma por Bao To** ofrece capacidades superiores para entender y utilizar su sistema de diseño:
 
-*   **Extracción completa de datos de diseño (`get_figma_data`)**: Obtiene información detallada sobre sus archivos de Figma o nodos específicos, simplificando las estructuras complejas de Figma en un formato más digerible para la IA.
-*   **Descargas precisas de imágenes (`download_figma_images`)**: Permite la descarga selectiva de activos de imagen específicos (SVG, PNG) de sus archivos de Figma.
+*   **Extracción Integral de Datos de Diseño (`get_figma_data`)**: Obtiene información detallada sobre sus archivos de Figma o nodos específicos, simplificando estructuras complejas de Figma en un formato más digerible para la IA.
+*   **Descargas Precisas de Imágenes (`download_figma_images`)**: Permite la descarga dirigida de activos de imagen específicos (SVGs, PNGs) de sus archivos de Figma.
+*   ⭐ **Extracción de Variables de Figma (`get_figma_variables`)** ⚠️ **Requiere Plan Enterprise de Figma**:
+    *   Recupera todas las variables y colecciones de variables directamente de su archivo de Figma usando la API de Variables de Figma.
+    *   **⚠️ IMPORTANTE**: Esta característica solo funciona con **planes Enterprise de Figma**. Los usuarios en planes Starter, Professional u Organization recibirán un error 403 Forbidden al intentar acceder a variables a través de la API REST.
+    *   Las Variables son el sistema de valores dinámicos de Figma que puede almacenar colores, números, cadenas y booleanos con diferentes modos/temas.
+    *   Diferente de los tokens de diseño: Las Variables son una característica específica de Figma para crear valores dinámicos y conscientes del modo, mientras que los tokens de diseño son valores de estilo extraídos del diseño.
+    *   Soporta tanto variables locales (todas las variables en el archivo) como variables publicadas (aquellas publicadas en la biblioteca del equipo).
+    *   Produce datos estructurados mostrando colecciones de variables, modos y valores para cada modo.
+    *   **Alternativa**: Para usuarios no Enterprise, use la función `generate_design_tokens` que extrae información de estilo similar y funciona en todos los planes de Figma.
 *   ⭐ **Generación automatizada de tokens de diseño (`generate_design_tokens`)**:
     *   Extrae tokens de diseño cruciales (colores, tipografía, espaciado, efectos) directamente de su archivo de Figma.
     *   Genera un archivo JSON estructurado, listo para integrarse en su flujo de trabajo de desarrollo o para ser utilizado por la IA para garantizar la coherencia del diseño.
@@ -86,6 +115,7 @@ Para aprovechar todo el poder del **Servidor MCP de Figma por Bao To**, especial
 
 2.  **Solicita herramientas específicas**:
     *   Para obtener datos básicos de Figma: *"Obtenga los datos de Figma para [enlace de Figma]."* (Es probable que el agente use `get_figma_data`).
+    *   **Para obtener variables de Figma** ⚠️ **Solo Enterprise**: *"Obtenga las variables de [enlace de Figma] usando el 'Servidor MCP de Figma por Bao To'."* El agente debería entonces llamar a la herramienta `get_figma_variables`. **Nota**: Esto solo funciona con planes Enterprise de Figma.
     *   **Para generar tokens de diseño**: *"Genere los tokens de diseño para [enlace de Figma] usando el 'Servidor MCP de Figma por Bao To'."* El agente debería entonces llamar a la herramienta `generate_design_tokens`.
     *   **Para generar documentación del sistema de diseño**: *"Genere la documentación del sistema de diseño para [enlace de Figma] usando el 'Servidor MCP de Figma por Bao To'."* El agente debería entonces llamar a la herramienta `generate_design_system_doc`.
 
@@ -237,33 +267,3 @@ Borde: 1px solid var(--stroke-primary-light)
 /* style_guide.md */
 | color-primary-500 | Azul primario | #556AEB |
 ```
-
-### Mejores prácticas
-
-1. **Captura de pantalla del sistema de colores**
-   - Asegurar que TODOS los colores sean visibles
-   - Incluir sistema de nombres completo
-   - Mostrar jerarquía completa de colores
-   - Capturar guías de uso
-
-2. **Nombres semánticos**
-   - Usar nombres consistentes basados en propósito
-   - Seguir una jerarquía clara de nombres
-   - Documentar relaciones entre colores
-   - Incluir contexto de uso
-
-3. **Actualizaciones completas**
-   - Verificar que TODAS las instancias estén actualizadas
-   - Revisar TODOS los archivos de documentación
-   - Revisar TODOS los ejemplos de componentes
-   - Validar TODAS las referencias
-
-4. **Mantenimiento**
-   - Mantener captura de pantalla actualizada
-   - Volver a ejecutar mapeo completo cuando sea necesario
-   - Verificar consistencia en TODOS los archivos
-   - Documentar cualquier anulación manual
-
-La IA también generará documentación adicional para ayudar a los desarrolladores a usar correctamente los tokens semánticos, incluyendo guías de uso y ejemplos para diferentes contextos (componentes, temas, etc.).
-
-## Contribuir 

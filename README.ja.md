@@ -63,12 +63,41 @@ CursorがFigmaデザインデータにアクセスできる場合、スクリー
 
 モデルに提供されるコンテキストの量を減らすことは、AIの精度を高め、応答をより関連性の高いものにするのに役立ちます。
 
+## プラン制限
+
+⚠️ **Figma Variables APIに関する重要な注意事項**
+
+`get_figma_variables` 機能は **Figma Enterprise プラン** が必要です。この制限は、このMCPサーバーではなく、Figmaによって課されています：
+
+- ✅ **すべてのプランで利用可能**: `get_figma_data`, `download_figma_images`, `generate_design_tokens`, `generate_design_system_doc`
+- ❌ **Enterprise専用**: `get_figma_variables` (Variables REST API アクセス)
+
+**この制限が存在する理由:**
+- FigmaはVariables APIアクセスをEnterpriseプランのみに制限しています
+- Starter、Professional、またはOrganizationプランのユーザーは `403 Forbidden` エラーを受け取ります
+- これはEnterpriseの売上を促進するためのFigmaのビジネス判断です
+
+**非Enterpriseユーザーのための代替案:**
+- `generate_design_tokens` を使用 - デザインから類似のスタイリング情報を抽出します
+- FigmaのPlugin APIを使用（カスタムプラグインの構築が必要）
+- Figma UIから手動で変数をエクスポート
+
+詳細については、[プラン機能に関するFigmaの公式ドキュメント](https://help.figma.com/hc/en-us/articles/360040328273-Figma-plans-and-features)をご覧ください。
+
 ## 主な機能と利点
 
 他のFigma MCPサーバーは基本的なノード情報を提供できますが、**Bao ToによるFigma MCPサーバー**はデザインシステムを理解し活用するための優れた機能を提供します。
 
 *   **包括的なデザインデータ抽出 (`get_figma_data`)**: Figmaファイルまたは特定のノードに関する詳細情報を取得し、複雑なFigma構造をAIにとってより理解しやすい形式に簡素化します。
 *   **正確な画像ダウンロード (`download_figma_images`)**: Figmaファイルから特定の画像アセット（SVG、PNG）を選択的にダウンロードできます。
+*   ⭐ **Figma Variables抽出 (`get_figma_variables`)** ⚠️ **Figma Enterprise プラン必須**:
+    *   FigmaのVariables APIを使用して、Figmaファイルからすべての変数と変数コレクションを直接取得します。
+    *   **⚠️ 重要**: この機能は **Figma Enterprise プラン** でのみ動作します。Starter、Professional、またはOrganizationプランのユーザーは、REST APIを介して変数にアクセスしようとすると403 Forbiddenエラーを受け取ります。
+    *   Variablesは、異なるモード/テーマで色、数値、文字列、ブール値を格納できるFigmaの動的値システムです。
+    *   デザイントークンとの違い: Variablesは動的でモード認識値を作成するための特定のFigma機能であり、デザイントークンはデザインから抽出されたスタイル値です。
+    *   ローカル変数（ファイル内のすべての変数）と公開変数（チームライブラリに公開された変数）の両方をサポートします。
+    *   変数コレクション、モード、各モードの値を示す構造化データを出力します。
+    *   **代替案**: 非Enterpriseユーザーの場合、すべてのFigmaプランで動作する類似のスタイリング情報を抽出する `generate_design_tokens` 機能を使用してください。
 *   ⭐ **自動デザイン-トークン生成 (`generate_design_tokens`)**:
     *   Figmaファイルから直接、重要なデザイン-トークン（色、タイポグラフィ、スペーシング、エフェクト）を抽出します。
     *   構造化されたJSONファイルを出力し、開発ワークフローに統合したり、AIがデザインの一貫性を確保するために使用したりできます。
@@ -89,8 +118,9 @@ CursorがFigmaデザインデータにアクセスできる場合、スクリー
 
 2.  **特定のツールを要求する**:
     *   基本的なFigmaデータを取得するには：*「[Figmaリンク]のFigmaデータを取得してください。」*（エージェントは `get_figma_data` を使用する可能性が高いです）。
+    *   **Figma variablesを取得するには** ⚠️ **Enterprise専用**: *「'Bao ToによるFigma MCPサーバー' を使用して [Figmaリンク] から変数を取得してください。」* これによりエージェントは `get_figma_variables` ツールを呼び出す必要があります。**注**: これはFigma Enterpriseプランでのみ動作します。
     *   **デザイン-トークンを生成するには**: *「'Bao ToによるFigma MCPサーバー' を使用して [Figmaリンク] のデザイン-トークンを生成してください。」* これにより、エージェントは `generate_design_tokens` ツールを呼び出す必要があります。
-    *   **デザインシステムドキュメントを生成するには**: *「'Bao ToによるFigma MCPサーバー' を使用して [Figmaリンク] のデザインシステムドキュメントを生成してください。」* これにより、エージェントは `generate_design_system_doc` ツールを呼び出す必要があります。
+    *   **デザインシステムドキュメントを生成するには**: *「'Bao ToによるFigma MCPサーバー' を使用して [Figmaリンク] のデザインシステムドキュメントを生成してください。」* これにより、エージェントは `generate_design_system_doc` ツールを呼び出す必要があります.
 
 3.  **必要なパラメータを提供する**:
     *   **`fileKey`**: 常にFigmaファイルリンクを提供してください。エージェントとサーバーは `fileKey` を抽出できます。

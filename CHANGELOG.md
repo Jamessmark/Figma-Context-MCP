@@ -31,10 +31,18 @@
   - Can optionally save variables data to a JSON file
   - Added comprehensive documentation in README explaining the difference between variables and design tokens
 
+### Documentation
+- **Added clear Enterprise plan warnings** throughout README for Variables API limitations
+  - Added dedicated "Plan Limitations" section explaining Figma's Enterprise-only restriction for Variables API
+  - Updated Key Features section with Enterprise plan warnings and alternative recommendations
+  - Updated usage instructions with clear Enterprise-only indicators
+  - Provided alternatives for non-Enterprise users (design tokens, Plugin API, manual export)
+  - Added link to Figma's official documentation on plan features
+
 ### Technical Changes
-- Added `getVariables()` method to `FigmaService` class to call Figma's `/v1/files/:file_key/variables/local` and `/v1/files/:file_key/variables/published` endpoints
-- Added new MCP tool registration for `get_figma_variables` with proper schema validation
-- Updated README with detailed documentation about the new function
+- Added `getVariables()` method to `FigmaService` class to call Figma's `/v1/files/:file_key/variables/:scope` endpoint
+- Added `get_figma_variables` MCP tool with proper schema validation and error handling
+- Supports both 'local' and 'published' variable scopes
 
 ## [0.6.20] - Previous version
 

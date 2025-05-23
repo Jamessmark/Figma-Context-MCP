@@ -70,12 +70,41 @@
 
 减少提供给模型的上下文数量有助于提高 AI 的准确性并使响应更具相关性。
 
+## 计划限制
+
+⚠️ **关于 Figma Variables API 的重要说明**
+
+`get_figma_variables` 功能需要 **Figma Enterprise 计划**。此限制是由 Figma 而非此 MCP 服务器施加的：
+
+- ✅ **所有计划均可使用**: `get_figma_data`, `download_figma_images`, `generate_design_tokens`, `generate_design_system_doc`
+- ❌ **仅限 Enterprise**: `get_figma_variables` (Variables REST API 访问)
+
+**存在此限制的原因:**
+- Figma 将 Variables API 访问限制为仅限 Enterprise 计划
+- Starter、Professional 或 Organization 计划用户将收到 `403 Forbidden` 错误
+- 这是 Figma 推动 Enterprise 销售的商业决策
+
+**非 Enterprise 用户的替代方案:**
+- 使用 `generate_design_tokens` - 从您的设计中提取类似的样式信息
+- 使用 Figma 的 Plugin API（需要构建自定义插件）
+- 从 Figma UI 手动导出变量
+
+更多详细信息，请参阅 [Figma 关于计划功能的官方文档](https://help.figma.com/hc/en-us/articles/360040328273-Figma-plans-and-features)。
+
 ## 主要特性与优势
 
 虽然其他 Figma MCP 服务器可以提供基本的节点信息，但 **Bao To 的 Figma MCP 服务器** 在理解和利用您的设计系统方面提供了卓越的功能：
 
 *   **全面的设计数据提取 (`get_figma_data`)**: 获取有关您的 Figma 文件或特定节点的详细信息，将复杂的 Figma 结构简化为 AI 更易于理解的格式。
 *   **精确的图像下载 (`download_figma_images`)**: 允许从您的 Figma 文件中选择性下载特定的图像资源（SVG、PNG）。
+*   ⭐ **Figma Variables 提取 (`get_figma_variables`)** ⚠️ **需要 Figma Enterprise 计划**:
+    *   使用 Figma 的 Variables API 直接从您的 Figma 文件中检索所有变量和变量集合。
+    *   **⚠️ 重要**: 此功能仅在 **Figma Enterprise 计划** 下运行。Starter、Professional 或 Organization 计划用户在尝试通过 REST API 访问变量时将收到 403 Forbidden 错误。
+    *   Variables 是 Figma 的动态值系统，可以在不同模式/主题下存储颜色、数字、字符串和布尔值。
+    *   与设计令牌的区别：Variables 是 Figma 特定功能，用于创建动态、模式感知的值，而设计令牌是从设计中提取的样式值。
+    *   支持本地变量（文件中的所有变量）和已发布变量（已发布到团队库的变量）。
+    *   输出显示变量集合、模式和每个模式值的结构化数据。
+    *   **替代方案**: 对于非 Enterprise 用户，请使用 `generate_design_tokens` 功能，它可在所有 Figma 计划中提取类似的样式信息。
 *   ⭐ **自动设计令牌生成 (`generate_design_tokens`)**:
     *   直接从您的 Figma 文件中提取关键的设计令牌（颜色、排版、间距、效果）。
     *   输出结构化的 JSON 文件，可随时集成到您的开发工作流程中或由 AI 用于确保设计一致性。
@@ -96,6 +125,7 @@
 
 2.  **请求特定工具**：
     *   获取基本的 Figma 数据：*"获取 [Figma 链接] 的 Figma 数据。"*（代理可能会使用 `get_figma_data`）。
+    *   **获取 Figma variables** ⚠️ **仅限 Enterprise**: *"使用'Bao To 的 Figma MCP 服务器'从 [Figma 链接] 获取变量。"* 然后代理应调用 `get_figma_variables` 工具。**注意**: 这仅在 Figma Enterprise 计划中有效。
     *   **生成设计令牌**：*"使用'Bao To 的 Figma MCP 服务器'为 [Figma 链接] 生成设计令牌。"* 然后，代理应调用 `generate_design_tokens` 工具。
     *   **生成设计系统文档**：*"使用'Bao To 的 Figma MCP 服务器'为 [Figma 链接] 生成设计系统文档。"* 然后，代理应调用 `generate_design_system_doc` 工具。
 

@@ -51,14 +51,43 @@ Lorsque Cursor a accès aux données de conception Figma, il peut être nettemen
 
 Ce serveur MCP est conçu pour simplifier et traduire les réponses de l'[API Figma](https://www.figma.com/developers/api) afin que seules les informations de mise en page et de style les plus pertinentes soient fournies au modèle IA.
 
-La réduction de la quantité de contexte fournie au modèle contribue à rendre l'IA plus précise et les réponses plus pertinentes.
+Réduire la quantité de contexte fourni au modèle aide à rendre l'IA plus précise et les réponses plus pertinentes.
+
+## Limitations du Plan
+
+⚠️ **Note Importante concernant l'API Variables de Figma**
+
+La fonction `get_figma_variables` nécessite un **plan Enterprise de Figma**. Cette limitation est imposée par Figma, pas par ce serveur MCP :
+
+- ✅ **Disponible sur TOUS les plans** : `get_figma_data`, `download_figma_images`, `generate_design_tokens`, `generate_design_system_doc`
+- ❌ **Enterprise uniquement** : `get_figma_variables` (accès à l'API REST Variables)
+
+**Pourquoi cette limitation existe :**
+- Figma restreint l'accès à l'API Variables aux plans Enterprise uniquement
+- Les utilisateurs des plans Starter, Professional ou Organization recevront des erreurs `403 Forbidden`
+- C'est une décision commerciale de Figma pour stimuler les ventes Enterprise
+
+**Alternatives pour les utilisateurs non-Enterprise :**
+- Utiliser `generate_design_tokens` - extrait des informations de style similaires de vos designs
+- Utiliser l'API Plugin de Figma (nécessite de construire un plugin personnalisé)
+- Exporter manuellement les variables depuis l'interface Figma
+
+Pour plus de détails, voir la [documentation officielle de Figma sur les fonctionnalités des plans](https://help.figma.com/hc/en-us/articles/360040328273-Figma-plans-and-features).
 
 ## Fonctionnalités Clés et Avantages
 
-Alors que d'autres serveurs MCP Figma peuvent fournir des informations de base sur les nœuds, le **Serveur MCP Figma par Bao To** offre des capacités supérieures pour comprendre et utiliser votre système de design :
+Alors que d'autres serveurs MCP Figma peuvent fournir des informations de nœud de base, **le Serveur MCP Figma par Bao To** offre des capacités supérieures pour comprendre et utiliser votre système de design :
 
-*   **Extraction complète des données de conception (`get_figma_data`)**: Récupère des informations détaillées sur vos fichiers Figma ou des nœuds spécifiques, simplifiant les structures Figma complexes en un format plus digestible pour l'IA.
-*   **Téléchargements d'images précis (`download_figma_images`)**: Permet le téléchargement ciblé d'actifs d'images spécifiques (SVG, PNG) à partir de vos fichiers Figma.
+*   **Extraction Complète de Données de Design (`get_figma_data`)** : Récupère des informations détaillées sur vos fichiers Figma ou nœuds spécifiques, simplifiant les structures Figma complexes en un format plus digestible pour l'IA.
+*   **Téléchargements d'Images Précis (`download_figma_images`)** : Permet le téléchargement ciblé d'actifs d'image spécifiques (SVG, PNG) depuis vos fichiers Figma.
+*   ⭐ **Extraction de Variables Figma (`get_figma_variables`)** ⚠️ **Nécessite un Plan Enterprise Figma** :
+    *   Récupère toutes les variables et collections de variables directement depuis votre fichier Figma en utilisant l'API Variables de Figma.
+    *   **⚠️ IMPORTANT** : Cette fonctionnalité ne fonctionne qu'avec les **plans Enterprise de Figma**. Les utilisateurs des plans Starter, Professional ou Organization recevront une erreur 403 Forbidden en tentant d'accéder aux variables via l'API REST.
+    *   Les Variables sont le système de valeurs dynamiques de Figma qui peut stocker des couleurs, nombres, chaînes et booléens avec différents modes/thèmes.
+    *   Différent des tokens de design : Les Variables sont une fonctionnalité spécifique de Figma pour créer des valeurs dynamiques et conscientes du mode, tandis que les tokens de design sont des valeurs de style extraites du design.
+    *   Supporte à la fois les variables locales (toutes les variables dans le fichier) et les variables publiées (celles publiées dans la bibliothèque d'équipe).
+    *   Produit des données structurées montrant les collections de variables, modes et valeurs pour chaque mode.
+    *   **Alternative** : Pour les utilisateurs non-Enterprise, utilisez la fonction `generate_design_tokens` qui extrait des informations de style similaires et fonctionne sur tous les plans Figma.
 *   ⭐ **Génération automatisée de tokens de design (`generate_design_tokens`)**:
     *   Extrait les tokens de design cruciaux (couleurs, typographie, espacement, effets) directement de votre fichier Figma.
     *   Produit un fichier JSON structuré, prêt à être intégré dans votre flux de travail de développement ou utilisé par l'IA pour garantir la cohérence du design.

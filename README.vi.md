@@ -58,14 +58,43 @@ Khi Cursor có quyền truy cập vào dữ liệu thiết kế Figma, nó có t
 
 Máy chủ MCP này được thiết kế để đơn giản hóa và dịch các phản hồi từ [API Figma](https://www.figma.com/developers/api) để chỉ cung cấp thông tin bố cục và kiểu dáng phù hợp nhất cho mô hình AI.
 
-Việc giảm lượng ngữ cảnh cung cấp cho mô hình giúp AI chính xác hơn và các phản hồi phù hợp hơn.
+Giảm lượng ngữ cảnh cung cấp cho mô hình giúp làm cho AI chính xác hơn và các phản hồi phù hợp hơn.
 
-## Các tính năng và lợi thế chính
+## Giới hạn của Gói
 
-Trong khi các máy chủ Figma MCP khác có thể cung cấp thông tin node cơ bản, **Máy chủ Figma MCP của Bao To** cung cấp các khả năng vượt trội để hiểu và sử dụng hệ thống thiết kế của bạn:
+⚠️ **Lưu ý Quan trọng về API Variables của Figma**
 
-*   **Trích xuất dữ liệu thiết kế toàn diện (`get_figma_data`)**: Tìm nạp thông tin chi tiết về các tệp Figma của bạn hoặc các node cụ thể, đơn giản hóa các cấu trúc Figma phức tạp thành một định dạng dễ hiểu hơn cho AI.
+Chức năng `get_figma_variables` yêu cầu **gói Enterprise của Figma**. Giới hạn này được áp đặt bởi Figma, không phải bởi máy chủ MCP này:
+
+- ✅ **Có sẵn trên TẤT CẢ các gói**: `get_figma_data`, `download_figma_images`, `generate_design_tokens`, `generate_design_system_doc`
+- ❌ **Chỉ dành cho Enterprise**: `get_figma_variables` (truy cập Variables REST API)
+
+**Tại sao giới hạn này tồn tại:**
+- Figma hạn chế truy cập Variables API chỉ cho các gói Enterprise
+- Người dùng gói Starter, Professional hoặc Organization sẽ nhận lỗi `403 Forbidden`
+- Đây là quyết định kinh doanh của Figma để thúc đẩy doanh số Enterprise
+
+**Thay thế cho người dùng không phải Enterprise:**
+- Sử dụng `generate_design_tokens` - trích xuất thông tin styling tương tự từ thiết kế của bạn
+- Sử dụng Plugin API của Figma (yêu cầu xây dựng plugin tùy chỉnh)
+- Xuất variables thủ công từ UI Figma
+
+Để biết thêm chi tiết, xem [tài liệu chính thức của Figma về tính năng gói](https://help.figma.com/hc/en-us/articles/360040328273-Figma-plans-and-features).
+
+## Tính năng chính & Ưu điểm
+
+Trong khi các máy chủ MCP Figma khác có thể cung cấp thông tin node cơ bản, **Máy chủ MCP Figma của Bao To** cung cấp khả năng vượt trội để hiểu và sử dụng hệ thống thiết kế của bạn:
+
+*   **Trích xuất dữ liệu thiết kế toàn diện (`get_figma_data`)**: Lấy thông tin chi tiết về các tệp Figma hoặc node cụ thể của bạn, đơn giản hóa cấu trúc Figma phức tạp thành định dạng dễ hiểu hơn cho AI.
 *   **Tải xuống hình ảnh chính xác (`download_figma_images`)**: Cho phép tải xuống có mục tiêu các tài sản hình ảnh cụ thể (SVG, PNG) từ các tệp Figma của bạn.
+*   ⭐ **Trích xuất Variables Figma (`get_figma_variables`)** ⚠️ **Yêu cầu Gói Enterprise Figma**:
+    *   Lấy tất cả variables và bộ sưu tập variables trực tiếp từ tệp Figma của bạn bằng API Variables của Figma.
+    *   **⚠️ QUAN TRỌNG**: Tính năng này chỉ hoạt động với **các gói Enterprise của Figma**. Người dùng trên các gói Starter, Professional hoặc Organization sẽ nhận lỗi 403 Forbidden khi cố gắng truy cập variables qua REST API.
+    *   Variables là hệ thống giá trị động của Figma có thể lưu trữ màu sắc, số, chuỗi và boolean với các chế độ/chủ đề khác nhau.
+    *   Khác với design tokens: Variables là tính năng cụ thể của Figma để tạo giá trị động, nhận biết chế độ, trong khi design tokens là các giá trị style được trích xuất từ thiết kế.
+    *   Hỗ trợ cả variables cục bộ (tất cả variables trong tệp) và variables đã xuất bản (những cái đã xuất bản cho thư viện team).
+    *   Xuất dữ liệu có cấu trúc hiển thị bộ sưu tập variables, chế độ và giá trị cho mỗi chế độ.
+    *   **Thay thế**: Đối với người dùng không phải Enterprise, hãy sử dụng chức năng `generate_design_tokens` để trích xuất thông tin styling tương tự và hoạt động trên tất cả các gói Figma.
 *   ⭐ **Tạo token thiết kế tự động (`generate_design_tokens`)**:
     *   Trích xuất các token thiết kế quan trọng (màu sắc, kiểu chữ, khoảng cách, hiệu ứng) trực tiếp từ tệp Figma của bạn.
     *   Xuất ra một tệp JSON có cấu trúc, sẵn sàng để tích hợp vào quy trình phát triển của bạn hoặc được AI sử dụng để đảm bảo tính nhất quán của thiết kế.
@@ -85,9 +114,10 @@ Các tính năng nâng cao này làm cho máy chủ này đặc biệt mạnh m�
     *   Nếu агент AI của bạn hỗ trợ chọn giữa nhiều máy chủ MCP hoặc nếu bạn đang nhắc nó một cách tổng quát hơn, bạn có thể cần phải nêu rõ ràng: *"Sử dụng 'Máy chủ Figma MCP của Bao To' cho các tác vụ Figma."* hoặc tham chiếu đến tên gói npm của nó: *"Sử dụng máy chủ MCP `@tothienbao6a0/figma-mcp-server`."*
 
 2.  **Yêu cầu Công cụ Cụ thể**:
-    *   Để nhận dữ liệu Figma cơ bản: *"Nhận dữ liệu Figma cho [liên kết Figma]."* (Агент có khả năng sẽ sử dụng `get_figma_data`).
-    *   **Để tạo token thiết kế**: *"Tạo token thiết kế cho [liên kết Figma] bằng 'Máy chủ Figma MCP của Bao To'."* Sau đó, агент sẽ gọi công cụ `generate_design_tokens`.
-    *   **Để tạo tài liệu hệ thống thiết kế**: *"Tạo tài liệu hệ thống thiết kế cho [liên kết Figma] bằng 'Máy chủ Figma MCP của Bao To'."* Sau đó, агент sẽ gọi công cụ `generate_design_system_doc`.
+    *   Để lấy dữ liệu Figma cơ bản: *"Lấy dữ liệu Figma cho [liên kết Figma]."* (Agent có thể sẽ sử dụng `get_figma_data`).
+    *   **Để lấy variables Figma** ⚠️ **Chỉ dành cho Enterprise**: *"Lấy variables từ [liên kết Figma] bằng 'Máy chủ MCP Figma của Bao To'."* Agent sau đó sẽ gọi công cụ `get_figma_variables`. **Lưu ý**: Điều này chỉ hoạt động với các gói Enterprise của Figma.
+    *   **Để tạo design tokens**: *"Tạo design tokens cho [liên kết Figma] bằng 'Máy chủ MCP Figma của Bao To'."* Agent sau đó sẽ gọi công cụ `generate_design_tokens`.
+    *   **Để tạo tài liệu hệ thống thiết kế**: *"Tạo tài liệu hệ thống thiết kế cho [liên kết Figma] bằng 'Máy chủ MCP Figma của Bao To'."* Agent sau đó sẽ gọi công cụ `generate_design_system_doc`.
 
 3.  **Cung cấp các tham số cần thiết**:
     *   **`fileKey`**: Luôn cung cấp liên kết tệp Figma. Агент và máy chủ có thể trích xuất `fileKey`.

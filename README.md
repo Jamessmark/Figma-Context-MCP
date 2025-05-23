@@ -60,18 +60,41 @@ This MCP server is designed to simplify and translate responses from the [Figma 
 
 Reducing the amount of context provided to the model helps make the AI more accurate and the responses more relevant.
 
+## Plan Limitations
+
+⚠️ **Important Note About Figma Variables API**
+
+The `get_figma_variables` function requires a **Figma Enterprise plan**. This limitation is imposed by Figma, not by this MCP server:
+
+- ✅ **Available on ALL plans**: `get_figma_data`, `download_figma_images`, `generate_design_tokens`, `generate_design_system_doc`
+- ❌ **Enterprise only**: `get_figma_variables` (Variables REST API access)
+
+**Why this limitation exists:**
+- Figma restricts Variables API access to Enterprise plans only
+- Users on Starter, Professional, or Organization plans will receive `403 Forbidden` errors
+- This is a business decision by Figma to drive Enterprise sales
+
+**Alternatives for non-Enterprise users:**
+- Use `generate_design_tokens` - extracts similar styling information from your designs
+- Use Figma's Plugin API (requires building a custom plugin)
+- Manually export variables from Figma UI
+
+For more details, see [Figma's official documentation on plan features](https://help.figma.com/hc/en-us/articles/360040328273-Figma-plans-and-features).
+
 ## Key Features & Advantages
 
 While other Figma MCP servers can provide basic node information, **Figma MCP Server by Bao To** offers superior capabilities for understanding and utilizing your design system:
 
 *   **Comprehensive Design Data Extraction (`get_figma_data`)**: Fetches detailed information about your Figma files or specific nodes, simplifying complex Figma structures into a more digestible format for AI.
 *   **Precise Image Downloads (`download_figma_images`)**: Allows targeted downloading of specific image assets (SVGs, PNGs) from your Figma files.
-*   ⭐ **Figma Variables Extraction (`get_figma_variables`)**:
+*   ⭐ **Figma Variables Extraction (`get_figma_variables`)** ⚠️ **Requires Figma Enterprise Plan**:
     *   Retrieves all variables and variable collections directly from your Figma file using Figma's Variables API.
+    *   **⚠️ IMPORTANT**: This feature only works with **Figma Enterprise plans**. Users on Starter, Professional, or Organization plans will receive a 403 Forbidden error when trying to access variables via the REST API.
     *   Variables are Figma's dynamic values system that can store colors, numbers, strings, and booleans with different modes/themes.
     *   Different from design tokens: Variables are a specific Figma feature for creating dynamic, mode-aware values, while design tokens are extracted style values from the design.
     *   Supports both local variables (all variables in the file) and published variables (those published to team library).
     *   Outputs structured data showing variable collections, modes, and values for each mode.
+    *   **Alternative**: For non-Enterprise users, use the `generate_design_tokens` function which extracts similar styling information and works on all Figma plans.
 *   ⭐ **Automated Design Token Generation (`generate_design_tokens`)**:
     *   Extracts crucial design tokens (colors, typography, spacing, effects) directly from your Figma file.
     *   Outputs a structured JSON file, ready to be integrated into your development workflow or used by AI to ensure design consistency.
@@ -92,13 +115,13 @@ To leverage the full power of **Figma MCP Server by Bao To**, especially its des
 
 2.  **Request Specific Tools**:
     *   To get basic Figma data: *"Get the Figma data for [Figma link]."* (The agent will likely use `get_figma_data`).
-    *   **To get Figma variables**: *"Get the variables from [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should then call the `get_figma_variables` tool.
+    *   **To get Figma variables** ⚠️ **Enterprise Only**: *"Get the variables from [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should then call the `get_figma_variables` tool. **Note**: This only works with Figma Enterprise plans.
     *   **To generate design tokens**: *"Generate the design tokens for [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should then call the `generate_design_tokens` tool.
     *   **To generate design system documentation**: *"Generate the design system documentation for [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should then call the `generate_design_system_doc` tool.
 
 3.  **Provide Necessary Parameters**:
     *   **`fileKey`**: Always provide the Figma file link. The agent and server can extract the `fileKey`.
-    *   **`scope` (for `get_figma_variables`)**: Optional parameter to specify whether to fetch 'local' variables (default, all variables in the file) or 'published' variables (only those published to team library).
+    *   **`scope` (for `get_figma_variables`)**: ⚠️ **Enterprise Only** - Optional parameter to specify whether to fetch 'local' variables (default, all variables in the file) or 'published' variables (only those published to team library).
     *   **`outputFilePath` (for `get_figma_variables` and `generate_design_tokens`) / `outputDirectoryPath` (for `generate_design_system_doc`)**:
         *   These tools allow you to specify where the generated files should be saved.
         *   If you want the documentation, tokens, or variables to be saved directly into your current project (e.g., in a `/docs` or `/tokens` folder), tell your agent:
