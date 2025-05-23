@@ -107,6 +107,26 @@ Reducing the amount of context provided to the model helps make the AI more accu
 - **Flexible Styling**: CSS Modules, Styled Components, Tailwind, SCSS
 - **Atomic Structure**: Organized component hierarchy for scalable development
 
+## 🛠 Available Tools
+
+### 📊 **Design Token Extraction**
+- `get_figma_data` - Extract complete Figma file structure and design data
+- `download_figma_images` - Download images, icons, and graphics from Figma
+- `get_figma_variables` - Get Figma Variables (Enterprise plans only)
+- `generate_design_tokens` - Extract and structure design tokens (colors, typography, spacing, effects)
+
+### 🔍 **Component Intelligence & Code Generation**
+- `analyze_figma_components` - **NEW!** Intelligent component analysis for AI-driven development
+- `generate_react_components` - **NEW!** Generate production-ready React components with TypeScript, tests, and Storybook
+
+### 📚 **Design System Management**  
+- `generate_design_system_doc` - Generate comprehensive design system documentation
+- `compare_design_tokens` - Compare design tokens between files or versions
+- `validate_design_system` - Validate design system consistency and best practices
+- `check_accessibility` - Check WCAG accessibility compliance with real contrast calculations
+- `migrate_tokens` - Convert tokens to different formats (Tailwind, CSS Variables, Style Dictionary)
+- `check_design_code_sync` - Compare design tokens with code implementation
+
 ## 🎯 **NEW: Advanced Design System Tools**
 
 *   🔄 **Design Token Comparison (`compare_design_tokens`)**:
@@ -351,26 +371,6 @@ To access these tools in your AI agent, use these prompts:
 *   **To check accessibility compliance**: *"Check the accessibility compliance for [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should call the `check_accessibility` tool.
 *   **To migrate tokens to different formats**: *"Convert the design tokens from [Figma link] to Tailwind format using the 'Figma MCP Server by Bao To'."* The agent should call the `migrate_tokens` tool with the desired target format.
 *   **To check design-code sync**: *"Check if the design tokens from [Figma link] are in sync with my code tokens file at [file path] using the 'Figma MCP Server by Bao To'."* The agent should call the `check_design_code_sync` tool.
-
-## 🛠 Available Tools
-
-### 📊 **Design Token Extraction**
-- `get_figma_data` - Extract complete Figma file structure and design data
-- `download_figma_images` - Download images, icons, and graphics from Figma
-- `get_figma_variables` - Get Figma Variables (Enterprise plans only)
-- `generate_design_tokens` - Extract and structure design tokens (colors, typography, spacing, effects)
-
-### 🔍 **Component Intelligence & Code Generation**
-- `analyze_figma_components` - **NEW!** Intelligent component analysis for AI-driven development
-- `generate_react_components` - **NEW!** Generate production-ready React components with TypeScript, tests, and Storybook
-
-### 📚 **Design System Management**  
-- `generate_design_system_doc` - Generate comprehensive design system documentation
-- `compare_design_tokens` - Compare design tokens between files or versions
-- `validate_design_system` - Validate design system consistency and best practices
-- `check_accessibility` - Check WCAG accessibility compliance with real contrast calculations
-- `migrate_tokens` - Convert tokens to different formats (Tailwind, CSS Variables, Style Dictionary)
-- `check_design_code_sync` - Compare design tokens with code implementation
 
 ## Plan Limitations
 
