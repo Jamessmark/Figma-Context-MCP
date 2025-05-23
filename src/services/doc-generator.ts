@@ -42,27 +42,77 @@ function toKebabCase(name: string): string {
 
 // --- Main Orchestrator --- 
 export function generateStructuredDesignSystemDocumentation(design: SimplifiedDesign, baseOutputDirectoryPath: string): void {
+  console.log('Starting enhanced documentation generation...');
+  
   // Ensure base directory exists (it should have been created by mcp.ts, but double check)
   if (!fs.existsSync(baseOutputDirectoryPath)) {
     fs.mkdirSync(baseOutputDirectoryPath, { recursive: true });
   }
 
-  // Generate design tokens for validation and accessibility checking
-  const tokens = generateTokensFromSimplifiedDesign(design);
-  
-  // Perform component analysis
-  const componentAnalysis = analyzeComponents(design);
-  
-  // Validate design system
-  const validation = validateDesignSystem(tokens);
-  
-  // Check accessibility compliance
-  const accessibilityIssues = checkAccessibility(tokens);
+  let tokens: any;
+  let componentAnalysis: any;
+  let validation: any;
+  let accessibilityIssues: any[] = [];
 
-  // 1. Generate Enhanced Overview with analysis results
-  const overviewContent = generateEnhancedOverviewMarkdown(design, baseOutputDirectoryPath, componentAnalysis, validation, accessibilityIssues);
-  fs.writeFileSync(path.join(baseOutputDirectoryPath, '_Overview.md'), overviewContent);
+  try {
+    console.log('Generating design tokens for validation and accessibility...');
+    // Generate design tokens for validation and accessibility checking
+    tokens = generateTokensFromSimplifiedDesign(design);
+    console.log('Tokens generated successfully');
+  } catch (error) {
+    console.error('Error generating tokens:', error);
+    tokens = { colors: {}, typography: {}, spacing: {}, effects: {} };
+  }
+  
+  try {
+    console.log('Performing component analysis...');
+    // Perform component analysis
+    componentAnalysis = analyzeComponents(design);
+    console.log('Component analysis completed:', componentAnalysis.summary);
+  } catch (error) {
+    console.error('Error in component analysis:', error);
+    componentAnalysis = {
+      summary: { totalComponents: 0, complexityScore: 0, consistencyScore: 0, implementationEffort: 'low', keyRecommendations: [] },
+      atomicHierarchy: { atoms: [], molecules: [], organisms: [] },
+      implementationReadiness: { readyToImplement: [], needsSpecification: [], hasIssues: [] },
+      designPatterns: []
+    };
+  }
+  
+  try {
+    console.log('Validating design system...');
+    // Validate design system
+    validation = validateDesignSystem(tokens);
+    console.log('Validation completed:', validation.passed);
+  } catch (error) {
+    console.error('Error in validation:', error);
+    validation = { passed: false, summary: { totalChecks: 0, passed: 0, failed: 0, warnings: 0 }, errors: [], warnings: [] };
+  }
+  
+  try {
+    console.log('Checking accessibility compliance...');
+    // Check accessibility compliance
+    accessibilityIssues = checkAccessibility(tokens);
+    console.log('Accessibility check completed:', accessibilityIssues.length, 'issues found');
+  } catch (error) {
+    console.error('Error in accessibility check:', error);
+    accessibilityIssues = [];
+  }
 
+  try {
+    console.log('Generating enhanced overview...');
+    // 1. Generate Enhanced Overview with analysis results
+    const overviewContent = generateEnhancedOverviewMarkdown(design, baseOutputDirectoryPath, componentAnalysis, validation, accessibilityIssues);
+    fs.writeFileSync(path.join(baseOutputDirectoryPath, '_Overview.md'), overviewContent);
+    console.log('Enhanced overview generated successfully');
+  } catch (error) {
+    console.error('Error generating enhanced overview:', error);
+    // Fallback to basic overview
+    const basicOverview = `# Design System Overview: ${design.name}\n\n*Last Modified:* ${design.lastModified}\n\nBasic documentation generated due to analysis errors.`;
+    fs.writeFileSync(path.join(baseOutputDirectoryPath, '_Overview.md'), basicOverview);
+  }
+
+  console.log('Generating global styles...');
   // 2. Generate Global Styles
   const globalStylesDir = path.join(baseOutputDirectoryPath, 'GlobalStyles');
   if (!fs.existsSync(globalStylesDir)) {
@@ -70,6 +120,7 @@ export function generateStructuredDesignSystemDocumentation(design: SimplifiedDe
   }
   generateAndSaveGlobalStylesMarkdown(design, globalStylesDir);
 
+  console.log('Generating components documentation...');
   // 3. Generate Components per Page
   const componentsDir = path.join(baseOutputDirectoryPath, 'Components');
   if (!fs.existsSync(componentsDir)) {
@@ -77,21 +128,50 @@ export function generateStructuredDesignSystemDocumentation(design: SimplifiedDe
   }
   generateAndSaveComponentsByPageMarkdown(design, componentsDir);
 
+  console.log('Creating Analysis directory...');
   // 4. Generate Component Analysis Report
   const analysisDir = path.join(baseOutputDirectoryPath, 'Analysis');
   if (!fs.existsSync(analysisDir)) {
     fs.mkdirSync(analysisDir, { recursive: true });
   }
-  generateComponentAnalysisMarkdown(componentAnalysis, analysisDir);
+  console.log('Analysis directory created:', analysisDir);
   
-  // 5. Generate Validation Report
-  generateValidationReportMarkdown(validation, analysisDir);
+  try {
+    console.log('Generating component analysis markdown...');
+    generateComponentAnalysisMarkdown(componentAnalysis, analysisDir);
+    console.log('Component analysis markdown generated');
+  } catch (error) {
+    console.error('Error generating component analysis markdown:', error);
+  }
   
-  // 6. Generate Accessibility Report
-  generateAccessibilityReportMarkdown(accessibilityIssues, analysisDir);
+  try {
+    console.log('Generating validation report...');
+    // 5. Generate Validation Report
+    generateValidationReportMarkdown(validation, analysisDir);
+    console.log('Validation report generated');
+  } catch (error) {
+    console.error('Error generating validation report:', error);
+  }
   
-  // 7. Generate Implementation Guide
-  generateImplementationGuideMarkdown(componentAnalysis, tokens, analysisDir);
+  try {
+    console.log('Generating accessibility report...');
+    // 6. Generate Accessibility Report
+    generateAccessibilityReportMarkdown(accessibilityIssues, analysisDir);
+    console.log('Accessibility report generated');
+  } catch (error) {
+    console.error('Error generating accessibility report:', error);
+  }
+  
+  try {
+    console.log('Generating implementation guide...');
+    // 7. Generate Implementation Guide
+    generateImplementationGuideMarkdown(componentAnalysis, tokens, analysisDir);
+    console.log('Implementation guide generated');
+  } catch (error) {
+    console.error('Error generating implementation guide:', error);
+  }
+  
+  console.log('Enhanced documentation generation completed!');
 }
 
 // --- Markdown Generation Functions --- 
