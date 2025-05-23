@@ -160,6 +160,20 @@ export class FigmaService {
     writeLogs("figma-simplified.yml", simplifiedResponse);
     return simplifiedResponse;
   }
+
+  async getVariables(fileKey: string, scope: 'local' | 'published' = 'local'): Promise<any> {
+    try {
+      const endpoint = `/files/${fileKey}/variables/${scope}`;
+      Logger.log(`Retrieving Figma variables: ${fileKey} (scope: ${scope})`);
+      const response = await this.request<any>(endpoint);
+      Logger.log("Got variables response");
+      writeLogs("figma-variables-raw.yml", response);
+      return response;
+    } catch (e) {
+      console.error("Failed to get variables:", e);
+      throw e;
+    }
+  }
 }
 
 function writeLogs(name: string, value: any) {

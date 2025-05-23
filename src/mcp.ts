@@ -13,7 +13,7 @@ import url from "url";
 
 const serverInfo = {
   name: "Figma MCP Server by Bao To",
-  version: "0.6.20",
+  version: "0.6.21",
 };
 
 const serverOptions = {
@@ -164,6 +164,77 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         return {
           isError: true,
           content: [{ type: "text", text: `Error downloading images: ${error}` }],
+        };
+      }
+    },
+  );
+
+  // New tool to get figma variables
+  server.tool(
+    "get_figma_variables",
+    "Retrieves all variables and variable collections from a Figma file. Variables are different from design tokens - they are Figma's dynamic values system that can store colors, numbers, strings, and booleans with different modes/themes.",
+    {
+      fileKey: z
+        .string()
+        .describe(
+          "The key of the Figma file to extract variables from, found in the Figma file URL.",
+        ),
+      scope: z
+        .enum(["local", "published"])
+        .optional()
+        .default("local")
+        .describe(
+          "Whether to fetch local variables (all variables in the file) or published variables (only those published to team library). Defaults to 'local'.",
+        ),
+      outputFilePath: z
+        .string()
+        .optional()
+        .describe(
+          "Optional full path (including filename) where the output JSON file should be saved. If not provided, variables data will be returned in the response.",
+        ),
+    },
+    async ({ fileKey, scope = "local", outputFilePath }) => {
+      try {
+        Logger.log(`Getting Figma variables for file: ${fileKey} (scope: ${scope})`);
+        const variablesResponse = await figmaService.getVariables(fileKey, scope);
+        Logger.log(`Successfully fetched variables from file: ${fileKey}`);
+
+        if (outputFilePath) {
+          const dirToEnsure = path.dirname(outputFilePath);
+          if (!fs.existsSync(dirToEnsure)) {
+            fs.mkdirSync(dirToEnsure, { recursive: true });
+            Logger.log(`Created directory: ${dirToEnsure}`);
+          }
+          
+          fs.writeFileSync(outputFilePath, JSON.stringify(variablesResponse, null, 2));
+          Logger.log(`Variables successfully saved to: ${outputFilePath}`);
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Variables successfully retrieved and saved to: ${outputFilePath}`,
+              },
+            ],
+          };
+        } else {
+          // Return variables data as YAML for better readability
+          const yamlResult = yaml.dump(variablesResponse);
+          return {
+            content: [
+              {
+                type: "text", 
+                text: yamlResult,
+              },
+            ],
+          };
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : JSON.stringify(error);
+        Logger.error(`Error getting variables for file ${fileKey}:`, message);
+        return {
+          isError: true,
+          content: [{ type: "text", text: `Error getting variables: ${message}` }],
         };
       }
     },
