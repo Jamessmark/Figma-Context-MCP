@@ -1,8 +1,8 @@
 <div align="center">
   <h1>Figma MCP Server by Bao To</h1>
-  <h2>Transform Figma Files into Complete Design Systems and Production-Ready Code with AI Intelligence</h2>
+  <h2>Transform Figma Files into Comprehensive Design Systems with AI Intelligence</h2>
   <p>
-    The only Figma MCP server that understands your components, extracts comprehensive design systems, and maintains design-code consistency automatically. Built for AI agents and modern development workflows.
+    The most advanced Figma MCP server for extracting design systems, analyzing components, and maintaining design-code consistency. Built specifically for AI agents and modern design workflows.
   </p>
   <p>
     🌐 Available in:
@@ -14,7 +14,7 @@
     <a href="README.vi.md">Tiếng Việt (Vietnamese)</a> |
     <a href="README.fr.md">Français (French)</a>
   </p>
-  <h3>From Figma files to complete design systems and semantic tokens in one command.<br/>Complete with documentation, accessibility compliance, and code generation capabilities.</h3>
+  <h3>From Figma files to comprehensive design systems and semantic tokens in one command.<br/>Complete with documentation, accessibility compliance, and component intelligence.</h3>
   <a href="https://npmcharts.com/compare/@tothienbao6a0/figma-mcp-server?interval=30">
     <img alt="weekly downloads" src="https://img.shields.io/npm/dm/@tothienbao6a0/figma-mcp-server.svg">
   </a>
@@ -46,15 +46,9 @@ This isn't just another Figma data extractor. It's an **intelligent design-to-co
 - **Atomic Design Classification**: Organizes components into atoms, molecules, organisms for scalable architecture
 - **Implementation Readiness**: Tells you which components are ready to build vs. need more specification
 
-### **Production-Ready Code Generation**
-- **Complete React Components**: TypeScript interfaces, proper props, state management, accessibility
-- **Modern Tooling**: Storybook stories, Jest/RTL tests, CSS Modules/Styled Components/Tailwind
-- **Design Token Integration**: Uses actual extracted design tokens in generated components
-- **Professional Structure**: Organized by atomic design principles with proper imports and exports
-
 ### **AI-Optimized Workflows**
 - **Perfect for AI Agents**: Cursor, Claude, and other AI tools get semantic component data instead of raw JSON
-- **One-Command Setup**: From Figma link to complete component library with documentation
+- **One-Command Setup**: From Figma link to complete design system documentation and tokens
 - **Design-Code Sync**: Automated checking to ensure design and implementation stay aligned
 - **Accessibility Built-in**: WCAG compliance checking and proper ARIA roles included automatically
 
@@ -83,10 +77,9 @@ Reducing the amount of context provided to the model helps make the AI more accu
 
 ### **AI-Driven Development**
 - **Component Intelligence**: Understands Figma component structure, variants, and relationships
-- **React Code Generation**: Automatically generates production-ready React components with TypeScript
 - **Atomic Design Classification**: Categorizes components into atoms, molecules, organisms
-- **Smart Props Inference**: Analyzes component variants to infer React props and TypeScript types
-- **Accessibility Integration**: Includes ARIA roles and accessibility best practices in generated code
+- **Smart Props Inference**: Analyzes component variants to understand component properties
+- **Accessibility Integration**: Identifies accessibility requirements and best practices
 
 ### **Design Token Extraction**
 - **Complete Token Analysis**: Extract colors, typography, spacing, border radius, and effects
@@ -101,12 +94,6 @@ Reducing the amount of context provided to the model helps make the AI more accu
 - **WCAG Compliance**: Real accessibility analysis with proper contrast calculations
 - **Design-Code Sync**: Ensure design tokens match code implementation
 
-### **Developer Experience**
-- **Multiple Framework Support**: React (Vue/Angular coming soon)
-- **Modern Tooling**: TypeScript, Storybook stories, Jest/RTL tests
-- **Flexible Styling**: CSS Modules, Styled Components, Tailwind, SCSS
-- **Atomic Structure**: Organized component hierarchy for scalable development
-
 ## Available Tools
 
 ### **Design Token Extraction**
@@ -115,9 +102,8 @@ Reducing the amount of context provided to the model helps make the AI more accu
 - `get_figma_variables` - Get Figma Variables (IMPORTANT: Enterprise plans only)
 - `generate_design_tokens` - Extract and structure design tokens (colors, typography, spacing, effects)
 
-### 🔍 **Component Intelligence & Code Generation**
+### **Component Intelligence**
 - `analyze_figma_components` - **NEW!** Intelligent component analysis for AI-driven development
-- `generate_react_components` - **NEW!** Generate production-ready React components with TypeScript, tests, and Storybook
 
 ### 📚 **Design System Management**  
 - `generate_design_system_doc` - Generate comprehensive design system documentation

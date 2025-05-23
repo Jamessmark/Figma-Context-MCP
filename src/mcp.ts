@@ -19,7 +19,6 @@ import {
   checkDesignCodeSync 
 } from "./services/design-system-tools.js";
 import { analyzeComponents } from "./services/component-analysis.js";
-import { generateComponentCode } from "./services/code-generation.js";
 import fsPromises from "fs/promises";
 
 const serverInfo = {
@@ -804,130 +803,6 @@ ${outputFilePath ? `\n💾 **Full analysis saved to:** ${outputFilePath}` : ''}`
             {
               type: "text",
               text: `❌ Error analyzing components: ${error instanceof Error ? error.message : "Unknown error"}`,
-            },
-          ],
-        };
-      }
-    }
-  );
-
-  // Tool 12: Generate React component code from Figma analysis
-  server.tool(
-    "generate_react_components",
-    "Generates production-ready React component code from Figma component analysis. Creates complete component files with TypeScript, styling, tests, and Storybook stories.",
-    {
-      fileKey: z
-        .string()
-        .describe("The key of the Figma file to generate components from."),
-      outputDirectory: z
-        .string()
-        .describe("Directory path where component files should be generated."),
-      options: z.object({
-        typescript: z.boolean().default(true).describe("Generate TypeScript files"),
-        stylingApproach: z.enum(['css-modules', 'styled-components', 'tailwind', 'scss']).default('css-modules').describe("CSS approach to use"),
-        includeStorybook: z.boolean().default(true).describe("Generate Storybook stories"),
-        includeTests: z.boolean().default(true).describe("Generate test files"),
-        useDesignTokens: z.boolean().default(true).describe("Use extracted design tokens"),
-        atomicStructure: z.boolean().default(true).describe("Organize components by atomic design hierarchy")
-      }).optional()
-    },
-    async (request) => {
-      const { fileKey, outputDirectory, options } = request;
-
-      try {
-        // Get Figma data and analyze components
-        const simplifiedData = await figmaService.getFile(fileKey);
-        const analysis = analyzeComponents(simplifiedData);
-        
-        // Generate design tokens
-        const tokens = generateTokensFromSimplifiedDesign(simplifiedData);
-
-        // Generate component code
-        const codeGenOptions = {
-          framework: 'react' as const,
-          typescript: options?.typescript ?? true,
-          stylingApproach: (options?.stylingApproach ?? 'css-modules') as 'css-modules' | 'styled-components' | 'tailwind' | 'scss',
-          includeStorybook: options?.includeStorybook ?? true,
-          includeTests: options?.includeTests ?? true,
-          useDesignTokens: options?.useDesignTokens ?? true,
-          atomicStructure: options?.atomicStructure ?? true
-        };
-
-        const result = generateComponentCode(analysis, tokens, codeGenOptions);
-
-        // Create output directory structure
-        await fsPromises.mkdir(outputDirectory, { recursive: true });
-
-        // Write all generated files
-        for (const file of result.files) {
-          const filePath = `${outputDirectory}/${file.filename}`;
-          const fileDir = filePath.substring(0, filePath.lastIndexOf('/'));
-          
-          if (fileDir !== outputDirectory) {
-            await fsPromises.mkdir(fileDir, { recursive: true });
-          }
-          
-          await fsPromises.writeFile(filePath, file.content, 'utf-8');
-        }
-
-        // Write setup instructions
-        await fsPromises.writeFile(
-          `${outputDirectory}/README.md`, 
-          result.setupInstructions.join('\n'), 
-          'utf-8'
-        );
-
-        // Write implementation notes
-        await fsPromises.writeFile(
-          `${outputDirectory}/IMPLEMENTATION_NOTES.md`, 
-          result.implementationNotes.join('\n'), 
-          'utf-8'
-        );
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: `🚀 **React Components Generated Successfully!**
-
-📁 **Generated Files:** ${result.files.length} files created in \`${outputDirectory}\`
-
-📊 **Component Summary:**
-- Total Components: ${analysis.components.length}
-- Atoms: ${analysis.atomicHierarchy.atoms.length}
-- Molecules: ${analysis.atomicHierarchy.molecules.length}  
-- Organisms: ${analysis.atomicHierarchy.organisms.length}
-
-📦 **File Types Generated:**
-- Components: ${result.files.filter(f => f.type === 'component').length}
-- TypeScript Types: ${result.files.filter(f => f.type === 'types').length}
-- Styles: ${result.files.filter(f => f.type === 'style').length}
-- Stories: ${result.files.filter(f => f.type === 'story').length}
-- Tests: ${result.files.filter(f => f.type === 'test').length}
-- Index Files: ${result.files.filter(f => f.type === 'index').length}
-
-🛠 **Technologies Used:**
-- Framework: React with ${codeGenOptions.typescript ? 'TypeScript' : 'JavaScript'}
-- Styling: ${codeGenOptions.stylingApproach}
-- Testing: ${codeGenOptions.includeTests ? 'React Testing Library' : 'None'}
-- Documentation: ${codeGenOptions.includeStorybook ? 'Storybook' : 'None'}
-
-📋 **Next Steps:**
-1. Install dependencies: \`npm install ${result.packageDependencies.join(' ')}\`
-2. Review generated components in \`${outputDirectory}\`
-3. Check \`README.md\` for setup instructions
-4. Read \`IMPLEMENTATION_NOTES.md\` for important notes
-
-✨ **Ready for Development:** Your Figma design is now production-ready React code!`,
-            },
-          ],
-        };
-      } catch (error) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: `❌ Error generating React components: ${error instanceof Error ? error.message : "Unknown error"}`,
             },
           ],
         };
