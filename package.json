@@ -1,6 +1,6 @@
 {
   "name": "@tothienbao6a0/figma-mcp-server",
-  "version": "0.6.34",
+  "version": "0.6.35",
   "description": "The most comprehensive Figma MCP server. Access Figma design data, generate comprehensive design systems, and empower AI-driven workflows.",
   "type": "module",
   "main": "dist/index.js",

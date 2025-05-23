@@ -1,8 +1,8 @@
 <div align="center">
   <h1>Figma MCP Server by Bao To</h1>
-  <h2>Transform Figma Files into Comprehensive Design Systems with AI Intelligence</h2>
+  <h2>Pull Component, Frames, Design Systems from Figma for Contextual AI-Powered Development</h2>
   <p>
-    The most advanced Figma MCP server for extracting design systems, analyzing components, and maintaining design-code consistency. Built specifically for AI agents and modern design workflows.
+    The most advanced Figma Model Context Protocol (MCP) server for extracting design systems, analyzing components, and maintaining design-code consistency. Built specifically for AI agents and modern design workflows.
   </p>
   <p>
     🌐 Available in:
