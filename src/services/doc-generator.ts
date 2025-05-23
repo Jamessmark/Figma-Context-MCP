@@ -2,6 +2,9 @@ import type { SimplifiedDesign, GlobalVars, StyleTypes, SimplifiedFill, TextStyl
 import type { SimplifiedEffects } from '../transformers/effects.js';
 import { type SimplifiedLayout, describeSimplifiedLayout } from '../transformers/layout.js';
 import type { SimplifiedStroke } from '../transformers/style.js';
+import { analyzeComponents, type ComponentAnalysisResult } from './component-analysis.js';
+import { validateDesignSystem, checkAccessibility } from './design-system-tools.js';
+import { generateTokensFromSimplifiedDesign } from './token-generator.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -44,8 +47,20 @@ export function generateStructuredDesignSystemDocumentation(design: SimplifiedDe
     fs.mkdirSync(baseOutputDirectoryPath, { recursive: true });
   }
 
-  // 1. Generate Overview
-  const overviewContent = generateOverviewMarkdown(design, baseOutputDirectoryPath);
+  // Generate design tokens for validation and accessibility checking
+  const tokens = generateTokensFromSimplifiedDesign(design);
+  
+  // Perform component analysis
+  const componentAnalysis = analyzeComponents(design);
+  
+  // Validate design system
+  const validation = validateDesignSystem(tokens);
+  
+  // Check accessibility compliance
+  const accessibilityIssues = checkAccessibility(tokens);
+
+  // 1. Generate Enhanced Overview with analysis results
+  const overviewContent = generateEnhancedOverviewMarkdown(design, baseOutputDirectoryPath, componentAnalysis, validation, accessibilityIssues);
   fs.writeFileSync(path.join(baseOutputDirectoryPath, '_Overview.md'), overviewContent);
 
   // 2. Generate Global Styles
@@ -61,11 +76,27 @@ export function generateStructuredDesignSystemDocumentation(design: SimplifiedDe
     fs.mkdirSync(componentsDir, { recursive: true });
   }
   generateAndSaveComponentsByPageMarkdown(design, componentsDir);
+
+  // 4. Generate Component Analysis Report
+  const analysisDir = path.join(baseOutputDirectoryPath, 'Analysis');
+  if (!fs.existsSync(analysisDir)) {
+    fs.mkdirSync(analysisDir, { recursive: true });
+  }
+  generateComponentAnalysisMarkdown(componentAnalysis, analysisDir);
+  
+  // 5. Generate Validation Report
+  generateValidationReportMarkdown(validation, analysisDir);
+  
+  // 6. Generate Accessibility Report
+  generateAccessibilityReportMarkdown(accessibilityIssues, analysisDir);
+  
+  // 7. Generate Implementation Guide
+  generateImplementationGuideMarkdown(componentAnalysis, tokens, analysisDir);
 }
 
 // --- Markdown Generation Functions --- 
 
-function generateOverviewMarkdown(design: SimplifiedDesign, baseOutputDirectoryPath: string): string {
+function generateEnhancedOverviewMarkdown(design: SimplifiedDesign, baseOutputDirectoryPath: string, componentAnalysis: ComponentAnalysisResult, validation: any, accessibilityIssues: any[]): string {
   let md = `# Design System Overview: ${s(design.name)}\n\n`;
   md += `*Last Modified:* ${s(design.lastModified)}\n\n`;
 
@@ -73,6 +104,32 @@ function generateOverviewMarkdown(design: SimplifiedDesign, baseOutputDirectoryP
     md += `## Thumbnail\n`;
     md += `![Thumbnail](${s(design.thumbnailUrl)})\n\n`;
   }
+
+  // Add Health Summary
+  md += `## System Health Summary\n\n`;
+  md += `### Component Analysis\n`;
+  md += `- **Total Components**: ${componentAnalysis.summary.totalComponents}\n`;
+  md += `- **Atoms**: ${componentAnalysis.atomicHierarchy.atoms.length}\n`;
+  md += `- **Molecules**: ${componentAnalysis.atomicHierarchy.molecules.length}\n`;
+  md += `- **Organisms**: ${componentAnalysis.atomicHierarchy.organisms.length}\n`;
+  md += `- **Complexity Score**: ${componentAnalysis.summary.complexityScore}/100\n`;
+  md += `- **Consistency Score**: ${componentAnalysis.summary.consistencyScore}/100\n`;
+  md += `- **Implementation Effort**: ${componentAnalysis.summary.implementationEffort.toUpperCase()}\n\n`;
+
+  md += `### Validation Status\n`;
+  const validationStatus = validation.passed ? '✅ PASSED' : '❌ FAILED';
+  md += `- **Overall Status**: ${validationStatus}\n`;
+  md += `- **Checks Passed**: ${validation.summary.passed}/${validation.summary.totalChecks}\n`;
+  md += `- **Errors**: ${validation.summary.failed}\n`;
+  md += `- **Warnings**: ${validation.summary.warnings}\n\n`;
+
+  md += `### Accessibility Status\n`;
+  const accessibilityErrors = accessibilityIssues.filter(issue => issue.severity === 'error').length;
+  const accessibilityWarnings = accessibilityIssues.filter(issue => issue.severity === 'warning').length;
+  const accessibilityStatus = accessibilityErrors === 0 ? '✅ COMPLIANT' : '❌ ISSUES FOUND';
+  md += `- **Overall Status**: ${accessibilityStatus}\n`;
+  md += `- **Critical Issues**: ${accessibilityErrors}\n`;
+  md += `- **Warnings**: ${accessibilityWarnings}\n\n`;
 
   md += `## Table of Contents\n\n`;
   md += `- [Global Styles](./GlobalStyles/)\n`;
@@ -91,9 +148,13 @@ function generateOverviewMarkdown(design: SimplifiedDesign, baseOutputDirectoryP
       }
     });
   }
+  
+  md += `- [Analysis Reports](./Analysis/)\n`;
+  md += `  - [Component Analysis](./Analysis/ComponentAnalysis.md)\n`;
+  md += `  - [Validation Report](./Analysis/ValidationReport.md)\n`;
+  md += `  - [Accessibility Report](./Analysis/AccessibilityReport.md)\n`;
+  md += `  - [Implementation Guide](./Analysis/ImplementationGuide.md)\n`;
   md += `\n`;
-  // Add link to tokens if we decide to place it here or know its path
-  // md += `- [Design Tokens](./design_tokens.json)\n`; 
 
   return md;
 }
@@ -668,4 +729,218 @@ export function generateMarkdownFromSimplifiedDesign(design: SimplifiedDesign): 
   }
 
   return md;
+} 
+
+// --- Enhanced Analysis and Reporting Functions ---
+
+function generateComponentAnalysisMarkdown(componentAnalysis: ComponentAnalysisResult, analysisDir: string): void {
+  let md = '# Component Analysis Report\n\n';
+  
+  md += `## Summary\n\n`;
+  md += `- **Total Components**: ${componentAnalysis.summary.totalComponents}\n`;
+  md += `- **Complexity Score**: ${componentAnalysis.summary.complexityScore}/100\n`;
+  md += `- **Consistency Score**: ${componentAnalysis.summary.consistencyScore}/100\n`;
+  md += `- **Implementation Effort**: ${componentAnalysis.summary.implementationEffort.toUpperCase()}\n\n`;
+
+  md += `## Atomic Design Hierarchy\n\n`;
+  md += `### Atoms (${componentAnalysis.atomicHierarchy.atoms.length})\n`;
+  if (componentAnalysis.atomicHierarchy.atoms.length > 0) {
+    componentAnalysis.atomicHierarchy.atoms.forEach(atom => {
+      md += `- ${atom}\n`;
+    });
+  } else {
+    md += 'No atoms identified.\n';
+  }
+  md += '\n';
+
+  md += `### Molecules (${componentAnalysis.atomicHierarchy.molecules.length})\n`;
+  if (componentAnalysis.atomicHierarchy.molecules.length > 0) {
+    componentAnalysis.atomicHierarchy.molecules.forEach(molecule => {
+      md += `- ${molecule}\n`;
+    });
+  } else {
+    md += 'No molecules identified.\n';
+  }
+  md += '\n';
+
+  md += `### Organisms (${componentAnalysis.atomicHierarchy.organisms.length})\n`;
+  if (componentAnalysis.atomicHierarchy.organisms.length > 0) {
+    componentAnalysis.atomicHierarchy.organisms.forEach(organism => {
+      md += `- ${organism}\n`;
+    });
+  } else {
+    md += 'No organisms identified.\n';
+  }
+  md += '\n';
+
+  md += `## Implementation Readiness\n\n`;
+  md += `### Ready to Implement (${componentAnalysis.implementationReadiness.readyToImplement.length})\n`;
+  componentAnalysis.implementationReadiness.readyToImplement.forEach(component => {
+    md += `- **${component.name}**: ${component.description || 'No description'}\n`;
+  });
+  md += '\n';
+
+  md += `### Needs Specification (${componentAnalysis.implementationReadiness.needsSpecification.length})\n`;
+  componentAnalysis.implementationReadiness.needsSpecification.forEach(component => {
+    md += `- **${component.name}**: ${component.description || 'Requires more detailed specification'}\n`;
+  });
+  md += '\n';
+
+  md += `### Has Issues (${componentAnalysis.implementationReadiness.hasIssues.length})\n`;
+  componentAnalysis.implementationReadiness.hasIssues.forEach(component => {
+    md += `- **${component.name}**: ${component.description || 'Has implementation issues'}\n`;
+  });
+  md += '\n';
+
+  md += `## Design Patterns\n\n`;
+  componentAnalysis.designPatterns.forEach(pattern => {
+    md += `### ${pattern.name}\n`;
+    md += `${pattern.description}\n\n`;
+    md += `**Components**: ${pattern.components.join(', ')}\n\n`;
+    md += `**Usage**: ${pattern.usage}\n\n`;
+    md += `**Implementation**: ${pattern.implementation}\n\n`;
+  });
+
+  md += `## Key Recommendations\n\n`;
+  componentAnalysis.summary.keyRecommendations.forEach(rec => {
+    md += `- ${rec}\n`;
+  });
+
+  fs.writeFileSync(path.join(analysisDir, 'ComponentAnalysis.md'), md);
+}
+
+function generateValidationReportMarkdown(validation: any, analysisDir: string): void {
+  let md = '# Design System Validation Report\n\n';
+  
+  const status = validation.passed ? '✅ PASSED' : '❌ FAILED';
+  md += `## Overall Status: ${status}\n\n`;
+  
+  md += `## Summary\n\n`;
+  md += `- **Total Checks**: ${validation.summary.totalChecks}\n`;
+  md += `- **Passed**: ${validation.summary.passed}\n`;
+  md += `- **Failed**: ${validation.summary.failed}\n`;
+  md += `- **Warnings**: ${validation.summary.warnings}\n\n`;
+
+  if (validation.errors && validation.errors.length > 0) {
+    md += `## Errors\n\n`;
+    validation.errors.forEach((error: any) => {
+      md += `### ${error.component}\n`;
+      md += `**Rule**: ${error.rule}\n\n`;
+      md += `**Issue**: ${error.issue}\n\n`;
+      md += `**Severity**: ${error.severity}\n\n`;
+    });
+  }
+
+  if (validation.warnings && validation.warnings.length > 0) {
+    md += `## Warnings\n\n`;
+    validation.warnings.forEach((warning: any) => {
+      md += `### ${warning.component}\n`;
+      md += `**Rule**: ${warning.rule}\n\n`;
+      md += `**Issue**: ${warning.issue}\n\n`;
+    });
+  }
+
+  fs.writeFileSync(path.join(analysisDir, 'ValidationReport.md'), md);
+}
+
+function generateAccessibilityReportMarkdown(accessibilityIssues: any[], analysisDir: string): void {
+  let md = '# Accessibility Compliance Report\n\n';
+  
+  const errors = accessibilityIssues.filter(issue => issue.severity === 'error');
+  const warnings = accessibilityIssues.filter(issue => issue.severity === 'warning');
+  
+  const status = errors.length === 0 ? '✅ COMPLIANT' : '❌ ISSUES FOUND';
+  md += `## Overall Status: ${status}\n\n`;
+  
+  md += `## Summary\n\n`;
+  md += `- **Total Issues**: ${accessibilityIssues.length}\n`;
+  md += `- **Critical Issues**: ${errors.length}\n`;
+  md += `- **Warnings**: ${warnings.length}\n\n`;
+
+  if (errors.length > 0) {
+    md += `## Critical Issues\n\n`;
+    errors.forEach(issue => {
+      md += `### ${issue.component}\n`;
+      md += `**Type**: ${issue.type}\n\n`;
+      md += `**Issue**: ${issue.issue}\n\n`;
+      md += `**Suggestion**: ${issue.suggestion}\n\n`;
+    });
+  }
+
+  if (warnings.length > 0) {
+    md += `## Warnings\n\n`;
+    warnings.forEach(issue => {
+      md += `### ${issue.component}\n`;
+      md += `**Type**: ${issue.type}\n\n`;
+      md += `**Issue**: ${issue.issue}\n\n`;
+      md += `**Suggestion**: ${issue.suggestion}\n\n`;
+    });
+  }
+
+  if (accessibilityIssues.length === 0) {
+    md += `## No Issues Found\n\n`;
+    md += `Congratulations! Your design system meets accessibility compliance standards.\n\n`;
+  }
+
+  fs.writeFileSync(path.join(analysisDir, 'AccessibilityReport.md'), md);
+}
+
+function generateImplementationGuideMarkdown(componentAnalysis: ComponentAnalysisResult, tokens: any, analysisDir: string): void {
+  let md = '# Implementation Guide\n\n';
+  
+  md += `This guide provides developers with practical information for implementing the design system components.\n\n`;
+
+  md += `## Quick Start\n\n`;
+  md += `### Priority Components\n\n`;
+  md += `Start with these components for maximum impact:\n\n`;
+  
+  componentAnalysis.implementationReadiness.readyToImplement.slice(0, 5).forEach(component => {
+    md += `#### ${component.name}\n`;
+    md += `**Category**: ${component.category}\n\n`;
+    md += `**Props**:\n`;
+    component.props.forEach(prop => {
+      md += `- \`${prop.name}\` (${prop.type}): ${prop.description || 'No description'}\n`;
+    });
+    md += '\n';
+    
+    if (component.codeHints.examples.length > 0) {
+      md += `**Example Usage**:\n`;
+      md += '```jsx\n';
+      md += component.codeHints.examples[0];
+      md += '\n```\n\n';
+    }
+  });
+
+  md += `## Design Token Usage\n\n`;
+  
+  md += `### Colors\n`;
+  Object.keys(tokens.colors).slice(0, 10).forEach(colorName => {
+    const color = tokens.colors[colorName];
+    const value = typeof color === 'string' ? color : color.value;
+    md += `- \`${colorName}\`: ${value}\n`;
+  });
+  md += '\n';
+
+  md += `### Typography\n`;
+  Object.keys(tokens.typography).slice(0, 5).forEach(typoName => {
+    const typo = tokens.typography[typoName];
+    md += `- \`${typoName}\`: ${typo.value.fontSize}px, ${typo.value.fontWeight}\n`;
+  });
+  md += '\n';
+
+  md += `## Component Relationships\n\n`;
+  md += `Understanding how components work together:\n\n`;
+  
+  componentAnalysis.designPatterns.forEach(pattern => {
+    md += `### ${pattern.name} Pattern\n`;
+    md += `${pattern.description}\n\n`;
+    md += `**Implementation Notes**: ${pattern.implementation}\n\n`;
+  });
+
+  md += `## Best Practices\n\n`;
+  componentAnalysis.summary.keyRecommendations.forEach(rec => {
+    md += `- ${rec}\n`;
+  });
+
+  fs.writeFileSync(path.join(analysisDir, 'ImplementationGuide.md'), md);
 } 
