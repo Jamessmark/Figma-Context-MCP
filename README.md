@@ -129,31 +129,31 @@ Reducing the amount of context provided to the model helps make the AI more accu
 
 ## 🎯 **NEW: Advanced Design System Tools**
 
-*   🔄 **Design Token Comparison (`compare_design_tokens`)**:
+*   **Design Token Comparison (`compare_design_tokens`)**:
     *   Compare design tokens between different Figma files or versions
     *   Identifies added, removed, and modified tokens with detailed change tracking
     *   Perfect for design system version control and migration planning
     *   Outputs structured comparison reports for team collaboration
 
-*   ✅ **Design System Validation (`validate_design_system`)**:
+*   **Design System Validation (`validate_design_system`)**:
     *   Validates design tokens against design system best practices and rules
     *   Checks color naming conventions, typography scale consistency, spacing patterns
     *   Identifies potential issues and inconsistencies before they reach production
     *   Provides actionable recommendations for design system improvements
 
-*   ♿ **Accessibility Compliance Checker (`check_accessibility`)**:
+*   **Accessibility Compliance Checker (`check_accessibility`)**:
     *   Analyzes design tokens for accessibility compliance issues
     *   Checks text sizes, color contrasts, touch target sizes
     *   Provides specific suggestions for WCAG compliance improvements
     *   Essential for building inclusive, accessible digital products
 
-*   🔄 **Multi-Format Token Migration (`migrate_tokens`)**:
+*   **Multi-Format Token Migration (`migrate_tokens`)**:
     *   Convert design tokens to popular formats: Tailwind, CSS Variables, Style Dictionary, Figma Tokens
     *   Seamless integration with existing development workflows and tools
     *   Maintains token relationships and semantic meaning across formats
     *   Supports batch conversion for large design systems
 
-*   🔗 **Design-Code Sync Checker (`check_design_code_sync`)**:
+*   **Design-Code Sync Checker (`check_design_code_sync`)**:
     *   Compare Figma design tokens with your actual codebase tokens
     *   Identifies discrepancies between design specifications and implementation
     *   Supports JSON, JavaScript, and TypeScript token file formats
