@@ -1,11 +1,8 @@
 <div align="center">
   <h1>Figma MCP Server by Bao To</h1>
-  <h2>Generate Complete Design Systems from Figma Files and Build Design-Compliant Components</h2>
+  <h2>Transform Figma Files into Complete Design Systems and Production-Ready Code with AI Intelligence</h2>
   <p>
-    - Automatically generate design systems and extract semantic tokens from Figma files<br/>
-    - Build components from either complete design systems or individual frame selections<br/>
-    - Get pixel-perfect implementations that match Figma designs exactly<br/>
-    - Automatically generate comprehensive design documentation
+    The only Figma MCP server that understands your components, extracts comprehensive design systems, and maintains design-code consistency automatically. Built for AI agents and modern development workflows.
   </p>
   <p>
     🌐 Available in:
@@ -17,7 +14,7 @@
     <a href="README.vi.md">Tiếng Việt (Vietnamese)</a> |
     <a href="README.fr.md">Français (French)</a>
   </p>
-  <h3>Empower your AI coding agent with direct Figma access.<br/>Generate design systems & tokens into your project, and implement UIs in one shot.</h3>
+  <h3>From Figma files to complete design systems and semantic tokens in one command.<br/>Complete with documentation, accessibility compliance, and code generation capabilities.</h3>
   <a href="https://npmcharts.com/compare/@tothienbao6a0/figma-mcp-server?interval=30">
     <img alt="weekly downloads" src="https://img.shields.io/npm/dm/@tothienbao6a0/figma-mcp-server.svg">
   </a>
@@ -39,6 +36,28 @@
 
 > **Note:** This server is a fork of the original [Framelink Figma MCP server](https://www.npmjs.com/package/figma-developer-mcp), building upon its foundation to offer enhanced capabilities for AI-driven design workflows. We acknowledge and appreciate the foundational work of the original Framelink team.
 
+## 🚀 **What Makes This Different**
+
+This isn't just another Figma data extractor. It's an **intelligent design-to-code system** that understands your components like a senior developer would:
+
+### 🧠 **Component Intelligence**
+- **Semantic Understanding**: Analyzes Figma components to understand their structure, variants, and relationships
+- **Smart Props Inference**: Automatically detects component properties and maps them to TypeScript interfaces
+- **Atomic Design Classification**: Organizes components into atoms, molecules, organisms for scalable architecture
+- **Implementation Readiness**: Tells you which components are ready to build vs. need more specification
+
+### ⚡ **Production-Ready Code Generation**
+- **Complete React Components**: TypeScript interfaces, proper props, state management, accessibility
+- **Modern Tooling**: Storybook stories, Jest/RTL tests, CSS Modules/Styled Components/Tailwind
+- **Design Token Integration**: Uses actual extracted design tokens in generated components
+- **Professional Structure**: Organized by atomic design principles with proper imports and exports
+
+### 🎯 **AI-Optimized Workflows**
+- **Perfect for AI Agents**: Cursor, Claude, and other AI tools get semantic component data instead of raw JSON
+- **One-Command Setup**: From Figma link to complete component library with documentation
+- **Design-Code Sync**: Automated checking to ensure design and implementation stay aligned
+- **Accessibility Built-in**: WCAG compliance checking and proper ARIA roles included automatically
+
 Give [Cursor](https://cursor.sh/) and other AI-powered coding tools access to your Figma files with this [Model Context Protocol](https://modelcontextprotocol.io/introduction) server, **Figma MCP Server by Bao To**.
 
 When Cursor has access to Figma design data, it can be significantly better at implementing designs accurately compared to alternative approaches like pasting screenshots.
@@ -59,28 +78,6 @@ When Cursor has access to Figma design data, it can be significantly better at i
 This MCP server is designed to simplify and translate responses from the [Figma API](https://www.figma.com/developers/api) so that only the most relevant layout and styling information is provided to the AI model.
 
 Reducing the amount of context provided to the model helps make the AI more accurate and the responses more relevant.
-
-## Plan Limitations
-
-⚠️ **Important Note About Figma Variables API**
-
-The `get_figma_variables` function requires a **Figma Enterprise plan**. This limitation is imposed by Figma, not by this MCP server:
-
-- ✅ **Available on ALL plans**: `get_figma_data`, `download_figma_images`, `generate_design_tokens`, `generate_design_system_doc`
-- ❌ **Enterprise only**: `get_figma_variables` (Variables REST API access)
-
-**Why this limitation exists:**
-- Figma restricts Variables API access to Enterprise plans only
-- Users on Starter, Professional, or Organization plans will receive `403 Forbidden` errors
-- This is a business decision by Figma to drive Enterprise sales
-
-**Alternatives for non-Enterprise users:**
-- Use `generate_design_tokens` with `includeDeducedVariables: true` - analyzes design tokens to create variable-like structures (NEW workaround feature)
-- Use `generate_design_tokens` (standard) - extracts similar styling information from your designs
-- Use Figma's Plugin API (requires building a custom plugin)
-- Manually export variables from Figma UI
-
-For more details, see [Figma's official documentation on plan features](https://help.figma.com/hc/en-us/articles/360040328273-Figma-plans-and-features).
 
 ## ✨ Key Features
 
@@ -374,3 +371,25 @@ To access these tools in your AI agent, use these prompts:
 - `check_accessibility` - Check WCAG accessibility compliance with real contrast calculations
 - `migrate_tokens` - Convert tokens to different formats (Tailwind, CSS Variables, Style Dictionary)
 - `check_design_code_sync` - Compare design tokens with code implementation
+
+## Plan Limitations
+
+⚠️ **Important Note About Figma Variables API**
+
+The `get_figma_variables` function requires a **Figma Enterprise plan**. This limitation is imposed by Figma, not by this MCP server:
+
+- ✅ **Available on ALL plans**: `get_figma_data`, `download_figma_images`, `generate_design_tokens`, `generate_design_system_doc`
+- ❌ **Enterprise only**: `get_figma_variables` (Variables REST API access)
+
+**Why this limitation exists:**
+- Figma restricts Variables API access to Enterprise plans only
+- Users on Starter, Professional, or Organization plans will receive `403 Forbidden` errors
+- This is a business decision by Figma to drive Enterprise sales
+
+**Alternatives for non-Enterprise users:**
+- Use `generate_design_tokens` with `includeDeducedVariables: true` - analyzes design tokens to create variable-like structures (NEW workaround feature)
+- Use `generate_design_tokens` (standard) - extracts similar styling information from your designs
+- Use Figma's Plugin API (requires building a custom plugin)
+- Manually export variables from Figma UI
+
+For more details, see [Figma's official documentation on plan features](https://help.figma.com/hc/en-us/articles/360040328273-Figma-plans-and-features).
