@@ -18,11 +18,13 @@ import {
   migrateTokens, 
   checkDesignCodeSync 
 } from "./services/design-system-tools.js";
+import { analyzeComponents } from "./services/component-analysis.js";
+import { generateComponentCode } from "./services/code-generation.js";
 import fsPromises from "fs/promises";
 
 const serverInfo = {
   name: "Figma MCP Server by Bao To",
-  version: "0.6.23",
+  version: "0.6.24",
 };
 
 const serverOptions = {
@@ -721,6 +723,211 @@ ${outputFilePath ? `\n💾 **Results saved to:** ${outputFilePath}` : ''}`,
             {
               type: "text",
               text: `❌ Error checking design-code sync: ${error instanceof Error ? error.message : "Unknown error"}`,
+            },
+          ],
+        };
+      }
+    }
+  );
+
+  // Tool 11: Analyze components for better AI code generation
+  server.tool(
+    "analyze_figma_components",
+    "Analyzes Figma components to understand structure, variants, and relationships for intelligent AI-driven code generation. This tool helps AI agents understand component semantics, props, variants, and implementation patterns.",
+    {
+      fileKey: z
+        .string()
+        .describe("The key of the Figma file to analyze for components."),
+      outputFilePath: z
+        .string()
+        .optional()
+        .describe("Optional path to save the component analysis results as JSON."),
+    },
+    async (request) => {
+      const { fileKey, outputFilePath } = request;
+
+      try {
+        const simplifiedData = await figmaService.getFile(fileKey);
+        const analysis = analyzeComponents(simplifiedData);
+
+        if (outputFilePath) {
+          await fsPromises.writeFile(outputFilePath, JSON.stringify(analysis, null, 2), 'utf-8');
+        }
+
+        const { summary, atomicHierarchy, implementationReadiness, designPatterns } = analysis;
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Component Analysis Results for "${simplifiedData.name}":
+
+📊 **Summary:**
+- Total Components: ${summary.totalComponents}
+- Atoms: ${summary.byCategory.atom} | Molecules: ${summary.byCategory.molecule} | Organisms: ${summary.byCategory.organism}
+- Complexity Score: ${summary.complexityScore}/100
+- Consistency Score: ${summary.consistencyScore}/100
+- Implementation Effort: ${summary.implementationEffort.toUpperCase()}
+
+🧱 **Atomic Design Hierarchy:**
+- ⚛️  Atoms (${atomicHierarchy.atoms.length}): ${atomicHierarchy.atoms.join(', ') || 'None'}
+- 🧬 Molecules (${atomicHierarchy.molecules.length}): ${atomicHierarchy.molecules.join(', ') || 'None'}
+- 🦠 Organisms (${atomicHierarchy.organisms.length}): ${atomicHierarchy.organisms.join(', ') || 'None'}
+- 📄 Templates (${atomicHierarchy.templates.length}): ${atomicHierarchy.templates.join(', ') || 'None'}
+
+🚀 **Implementation Readiness:**
+- ✅ Ready to Implement (${implementationReadiness.readyToImplement.length}): ${implementationReadiness.readyToImplement.map(c => c.name).join(', ') || 'None'}
+- ⚠️  Need Specification (${implementationReadiness.needsSpecification.length}): ${implementationReadiness.needsSpecification.map(c => c.name).join(', ') || 'None'}
+- 🚫 Have Issues (${implementationReadiness.hasIssues.length}): ${implementationReadiness.hasIssues.map(c => c.name).join(', ') || 'None'}
+
+🎨 **Design Patterns Found (${designPatterns.length}):**
+${designPatterns.map(pattern => `- **${pattern.name}**: ${pattern.description}`).join('\n') || 'No patterns detected'}
+
+💡 **Key Recommendations:**
+${summary.keyRecommendations.map(rec => `- ${rec}`).join('\n')}
+
+📋 **For AI Code Generation:**
+Each component now includes:
+- Inferred props and variants
+- HTML element suggestions
+- React patterns and state management hints
+- Accessibility requirements
+- Code examples and usage patterns
+
+${outputFilePath ? `\n💾 **Full analysis saved to:** ${outputFilePath}` : ''}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `❌ Error analyzing components: ${error instanceof Error ? error.message : "Unknown error"}`,
+            },
+          ],
+        };
+      }
+    }
+  );
+
+  // Tool 12: Generate React component code from Figma analysis
+  server.tool(
+    "generate_react_components",
+    "Generates production-ready React component code from Figma component analysis. Creates complete component files with TypeScript, styling, tests, and Storybook stories.",
+    {
+      fileKey: z
+        .string()
+        .describe("The key of the Figma file to generate components from."),
+      outputDirectory: z
+        .string()
+        .describe("Directory path where component files should be generated."),
+      options: z.object({
+        typescript: z.boolean().default(true).describe("Generate TypeScript files"),
+        stylingApproach: z.enum(['css-modules', 'styled-components', 'tailwind', 'scss']).default('css-modules').describe("CSS approach to use"),
+        includeStorybook: z.boolean().default(true).describe("Generate Storybook stories"),
+        includeTests: z.boolean().default(true).describe("Generate test files"),
+        useDesignTokens: z.boolean().default(true).describe("Use extracted design tokens"),
+        atomicStructure: z.boolean().default(true).describe("Organize components by atomic design hierarchy")
+      }).optional()
+    },
+    async (request) => {
+      const { fileKey, outputDirectory, options } = request;
+
+      try {
+        // Get Figma data and analyze components
+        const simplifiedData = await figmaService.getFile(fileKey);
+        const analysis = analyzeComponents(simplifiedData);
+        
+        // Generate design tokens
+        const tokens = generateTokensFromSimplifiedDesign(simplifiedData);
+
+        // Generate component code
+        const codeGenOptions = {
+          framework: 'react' as const,
+          typescript: options?.typescript ?? true,
+          stylingApproach: (options?.stylingApproach ?? 'css-modules') as 'css-modules' | 'styled-components' | 'tailwind' | 'scss',
+          includeStorybook: options?.includeStorybook ?? true,
+          includeTests: options?.includeTests ?? true,
+          useDesignTokens: options?.useDesignTokens ?? true,
+          atomicStructure: options?.atomicStructure ?? true
+        };
+
+        const result = generateComponentCode(analysis, tokens, codeGenOptions);
+
+        // Create output directory structure
+        await fsPromises.mkdir(outputDirectory, { recursive: true });
+
+        // Write all generated files
+        for (const file of result.files) {
+          const filePath = `${outputDirectory}/${file.filename}`;
+          const fileDir = filePath.substring(0, filePath.lastIndexOf('/'));
+          
+          if (fileDir !== outputDirectory) {
+            await fsPromises.mkdir(fileDir, { recursive: true });
+          }
+          
+          await fsPromises.writeFile(filePath, file.content, 'utf-8');
+        }
+
+        // Write setup instructions
+        await fsPromises.writeFile(
+          `${outputDirectory}/README.md`, 
+          result.setupInstructions.join('\n'), 
+          'utf-8'
+        );
+
+        // Write implementation notes
+        await fsPromises.writeFile(
+          `${outputDirectory}/IMPLEMENTATION_NOTES.md`, 
+          result.implementationNotes.join('\n'), 
+          'utf-8'
+        );
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `🚀 **React Components Generated Successfully!**
+
+📁 **Generated Files:** ${result.files.length} files created in \`${outputDirectory}\`
+
+📊 **Component Summary:**
+- Total Components: ${analysis.components.length}
+- Atoms: ${analysis.atomicHierarchy.atoms.length}
+- Molecules: ${analysis.atomicHierarchy.molecules.length}  
+- Organisms: ${analysis.atomicHierarchy.organisms.length}
+
+📦 **File Types Generated:**
+- Components: ${result.files.filter(f => f.type === 'component').length}
+- TypeScript Types: ${result.files.filter(f => f.type === 'types').length}
+- Styles: ${result.files.filter(f => f.type === 'style').length}
+- Stories: ${result.files.filter(f => f.type === 'story').length}
+- Tests: ${result.files.filter(f => f.type === 'test').length}
+- Index Files: ${result.files.filter(f => f.type === 'index').length}
+
+🛠 **Technologies Used:**
+- Framework: React with ${codeGenOptions.typescript ? 'TypeScript' : 'JavaScript'}
+- Styling: ${codeGenOptions.stylingApproach}
+- Testing: ${codeGenOptions.includeTests ? 'React Testing Library' : 'None'}
+- Documentation: ${codeGenOptions.includeStorybook ? 'Storybook' : 'None'}
+
+📋 **Next Steps:**
+1. Install dependencies: \`npm install ${result.packageDependencies.join(' ')}\`
+2. Review generated components in \`${outputDirectory}\`
+3. Check \`README.md\` for setup instructions
+4. Read \`IMPLEMENTATION_NOTES.md\` for important notes
+
+✨ **Ready for Development:** Your Figma design is now production-ready React code!`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `❌ Error generating React components: ${error instanceof Error ? error.message : "Unknown error"}`,
             },
           ],
         };

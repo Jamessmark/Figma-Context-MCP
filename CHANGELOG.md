@@ -100,3 +100,45 @@
 - Image downloads (`download_figma_images`)  
 - Design token generation (`generate_design_tokens`)
 - Design system documentation (`generate_design_system_doc`)
+
+## [0.7.0] - 2024-12-29
+
+### 🚀 Major New Features
+
+#### **AI-Driven Component Intelligence & Code Generation**
+- **NEW: `analyze_figma_components`** - Revolutionary component analysis for AI-driven development:
+  - **Component Intelligence**: Deep understanding of Figma component structure, variants, and relationships
+  - **Atomic Design Classification**: Automatically categorizes components as atoms, molecules, organisms, templates
+  - **Smart Props Inference**: Analyzes component variants to infer React props and TypeScript types
+  - **Usage Pattern Analysis**: Detects how components are used and their relationships
+  - **Implementation Readiness Assessment**: Identifies which components are ready for development
+  - **Code Generation Hints**: Provides HTML element suggestions, React patterns, and accessibility requirements
+
+- **NEW: `generate_react_components`** - Production-ready React component generator:
+  - **Complete Component Generation**: Creates React components with TypeScript, props, and proper structure
+  - **Multiple Styling Approaches**: CSS Modules, Styled Components, Tailwind CSS, SCSS support
+  - **Testing & Documentation**: Generates Jest/RTL tests and Storybook stories automatically
+  - **Atomic Structure Organization**: Organizes components by atomic design hierarchy
+  - **Design Token Integration**: Uses extracted design tokens in generated components
+  - **Accessibility Built-in**: Includes ARIA roles and accessibility best practices
+  - **Development Ready**: Generates package.json dependencies and setup instructions
+
+#### **Why These Tools Matter**
+These tools bridge the gap between design and development by enabling:
+- **AI agents** to understand Figma components semantically for better code generation
+- **Developers** to get production-ready React code directly from Figma designs
+- **Design systems teams** to maintain consistency between design and code
+- **Faster workflows** from design to implementation with intelligent automation
+
+### 🎯 **Real-World Workflows Enabled**
+1. **"Build this component from Figma"** → AI now understands component structure and generates proper code
+2. **"Convert my design system to React"** → Complete component library with tests and documentation
+3. **"Keep design-code in sync"** → Automated detection of inconsistencies and updates
+
+### 📊 **Enhanced Component Analysis**
+- Component variant detection and property inference
+- Design pattern identification (card systems, button hierarchies)
+- Implementation effort estimation and complexity scoring
+- Component relationship mapping and dependency analysis
+
+## [0.6.23] - 2024-12-28

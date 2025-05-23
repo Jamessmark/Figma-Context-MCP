@@ -82,37 +82,33 @@ The `get_figma_variables` function requires a **Figma Enterprise plan**. This li
 
 For more details, see [Figma's official documentation on plan features](https://help.figma.com/hc/en-us/articles/360040328273-Figma-plans-and-features).
 
-## Key Features
+## ✨ Key Features
 
-*   🔍 **Comprehensive Design Data Extraction (`get_figma_data`)**:
-    *   Retrieves complete Figma file structure and component data in a streamlined format.
-    *   Includes node hierarchy, styling information, layout constraints, and component definitions.
-    *   Provides the foundation for AI-driven design analysis and code generation.
+### 🎯 **AI-Driven Development**
+- **Component Intelligence**: Understands Figma component structure, variants, and relationships
+- **React Code Generation**: Automatically generates production-ready React components with TypeScript
+- **Atomic Design Classification**: Categorizes components into atoms, molecules, organisms
+- **Smart Props Inference**: Analyzes component variants to infer React props and TypeScript types
+- **Accessibility Integration**: Includes ARIA roles and accessibility best practices in generated code
 
-*   🖼️ **Smart Image and Icon Handling (`download_figma_images`)**:
-    *   Downloads SVG and PNG images directly from Figma components and frames.
-    *   Automatically handles image fills and vector graphics with proper local file management.
-    *   Essential for creating complete, asset-ready implementations of your designs.
+### 🎨 **Design Token Extraction**
+- **Complete Token Analysis**: Extract colors, typography, spacing, border radius, and effects
+- **Smart Categorization**: Automatically groups related tokens (primary colors, text sizes, etc.)
+- **Deduced Variables**: Enterprise Variables API workaround for non-Enterprise accounts
+- **Multiple Export Formats**: JSON, CSS Variables, Tailwind, Style Dictionary, Figma Tokens
 
-*   🔧 **Advanced Variables System (`get_figma_variables`)** ⚠️ **[Enterprise Plans Only]**:
-    *   Extracts Figma's dynamic Variables (colors, numbers, strings, booleans) with full mode/theme support.
-    *   Retrieves variable collections and their values across different modes (light/dark themes, device variants, etc.).
-    *   Provides structured data showing how variables change across different contexts and modes.
+### 🏗 **Design System Tools**
+- **Comprehensive Documentation**: Generate design system docs with component examples
+- **Version Comparison**: Track changes between design system versions
+- **Validation & Governance**: Check consistency and adherence to best practices
+- **WCAG Compliance**: Real accessibility analysis with proper contrast calculations
+- **Design-Code Sync**: Ensure design tokens match code implementation
 
-*   ⭐ **Automated Design Token Generation (`generate_design_tokens`)**:
-    *   Extracts crucial design tokens (colors, typography, spacing, effects) directly from your Figma file.
-    *   Outputs a structured JSON file, ready to be integrated into your development workflow or used by AI to ensure design consistency.
-    *   **NEW: Variable Deduction Capability** - Can optionally analyze design tokens to deduce variable-like structures as a workaround for the Enterprise-only Variables API limitation.
-    *   When enabled via `includeDeducedVariables: true`, provides:
-        *   Pattern-based variable grouping (e.g., detecting `primary-500`, `primary-400` color scales)
-        *   Inferred variable collections (Colors, Typography, Spacing)
-        *   Usage context analysis (e.g., border-color vs. background-color)
-        *   Variables API-compatible output format
-
-*   📖 **Complete Design System Documentation (`generate_design_system_doc`)**:
-    *   Generates comprehensive Markdown documentation for your entire design system.
-    *   Creates organized sections for components, global styles, typography scales, color palettes, and spacing systems.
-    *   Includes usage examples, component specifications, and design guidelines in a developer-friendly format.
+### 🔧 **Developer Experience**
+- **Multiple Framework Support**: React (Vue/Angular coming soon)
+- **Modern Tooling**: TypeScript, Storybook stories, Jest/RTL tests
+- **Flexible Styling**: CSS Modules, Styled Components, Tailwind, SCSS
+- **Atomic Structure**: Organized component hierarchy for scalable development
 
 ## 🎯 **NEW: Advanced Design System Tools**
 
@@ -358,3 +354,23 @@ To access these tools in your AI agent, use these prompts:
 *   **To check accessibility compliance**: *"Check the accessibility compliance for [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should call the `check_accessibility` tool.
 *   **To migrate tokens to different formats**: *"Convert the design tokens from [Figma link] to Tailwind format using the 'Figma MCP Server by Bao To'."* The agent should call the `migrate_tokens` tool with the desired target format.
 *   **To check design-code sync**: *"Check if the design tokens from [Figma link] are in sync with my code tokens file at [file path] using the 'Figma MCP Server by Bao To'."* The agent should call the `check_design_code_sync` tool.
+
+## 🛠 Available Tools
+
+### 📊 **Design Token Extraction**
+- `get_figma_data` - Extract complete Figma file structure and design data
+- `download_figma_images` - Download images, icons, and graphics from Figma
+- `get_figma_variables` - Get Figma Variables (Enterprise plans only)
+- `generate_design_tokens` - Extract and structure design tokens (colors, typography, spacing, effects)
+
+### 🔍 **Component Intelligence & Code Generation**
+- `analyze_figma_components` - **NEW!** Intelligent component analysis for AI-driven development
+- `generate_react_components` - **NEW!** Generate production-ready React components with TypeScript, tests, and Storybook
+
+### 📚 **Design System Management**  
+- `generate_design_system_doc` - Generate comprehensive design system documentation
+- `compare_design_tokens` - Compare design tokens between files or versions
+- `validate_design_system` - Validate design system consistency and best practices
+- `check_accessibility` - Check WCAG accessibility compliance with real contrast calculations
+- `migrate_tokens` - Convert tokens to different formats (Tailwind, CSS Variables, Style Dictionary)
+- `check_design_code_sync` - Compare design tokens with code implementation
