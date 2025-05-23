@@ -1,6 +1,6 @@
 {
   "name": "@tothienbao6a0/figma-mcp-server",
-  "version": "0.6.28",
+  "version": "0.6.29",
   "description": "A Model Context Protocol server for accessing Figma design data, extended by Bao To.",
   "type": "module",
   "main": "dist/index.js",

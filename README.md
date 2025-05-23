@@ -36,23 +36,23 @@
 
 > **Note:** This server is a fork of the original [Framelink Figma MCP server](https://www.npmjs.com/package/figma-developer-mcp), building upon its foundation to offer enhanced capabilities for AI-driven design workflows. We acknowledge and appreciate the foundational work of the original Framelink team.
 
-## 🚀 **What Makes This Different**
+## **What Makes This Different**
 
 This isn't just another Figma data extractor. It's an **intelligent design-to-code system** that understands your components like a senior developer would:
 
-### 🧠 **Component Intelligence**
+### **Component Intelligence**
 - **Semantic Understanding**: Analyzes Figma components to understand their structure, variants, and relationships
 - **Smart Props Inference**: Automatically detects component properties and maps them to TypeScript interfaces
 - **Atomic Design Classification**: Organizes components into atoms, molecules, organisms for scalable architecture
 - **Implementation Readiness**: Tells you which components are ready to build vs. need more specification
 
-### ⚡ **Production-Ready Code Generation**
+### **Production-Ready Code Generation**
 - **Complete React Components**: TypeScript interfaces, proper props, state management, accessibility
 - **Modern Tooling**: Storybook stories, Jest/RTL tests, CSS Modules/Styled Components/Tailwind
 - **Design Token Integration**: Uses actual extracted design tokens in generated components
 - **Professional Structure**: Organized by atomic design principles with proper imports and exports
 
-### 🎯 **AI-Optimized Workflows**
+### **AI-Optimized Workflows**
 - **Perfect for AI Agents**: Cursor, Claude, and other AI tools get semantic component data instead of raw JSON
 - **One-Command Setup**: From Figma link to complete component library with documentation
 - **Design-Code Sync**: Automated checking to ensure design and implementation stay aligned
@@ -79,40 +79,40 @@ This MCP server is designed to simplify and translate responses from the [Figma 
 
 Reducing the amount of context provided to the model helps make the AI more accurate and the responses more relevant.
 
-## ✨ Key Features
+## Key Features
 
-### 🎯 **AI-Driven Development**
+### **AI-Driven Development**
 - **Component Intelligence**: Understands Figma component structure, variants, and relationships
 - **React Code Generation**: Automatically generates production-ready React components with TypeScript
 - **Atomic Design Classification**: Categorizes components into atoms, molecules, organisms
 - **Smart Props Inference**: Analyzes component variants to infer React props and TypeScript types
 - **Accessibility Integration**: Includes ARIA roles and accessibility best practices in generated code
 
-### 🎨 **Design Token Extraction**
+### **Design Token Extraction**
 - **Complete Token Analysis**: Extract colors, typography, spacing, border radius, and effects
 - **Smart Categorization**: Automatically groups related tokens (primary colors, text sizes, etc.)
 - **Deduced Variables**: Enterprise Variables API workaround for non-Enterprise accounts
 - **Multiple Export Formats**: JSON, CSS Variables, Tailwind, Style Dictionary, Figma Tokens
 
-### 🏗 **Design System Tools**
+### **Design System Tools**
 - **Comprehensive Documentation**: Generate design system docs with component examples
 - **Version Comparison**: Track changes between design system versions
 - **Validation & Governance**: Check consistency and adherence to best practices
 - **WCAG Compliance**: Real accessibility analysis with proper contrast calculations
 - **Design-Code Sync**: Ensure design tokens match code implementation
 
-### 🔧 **Developer Experience**
+### **Developer Experience**
 - **Multiple Framework Support**: React (Vue/Angular coming soon)
 - **Modern Tooling**: TypeScript, Storybook stories, Jest/RTL tests
 - **Flexible Styling**: CSS Modules, Styled Components, Tailwind, SCSS
 - **Atomic Structure**: Organized component hierarchy for scalable development
 
-## 🛠 Available Tools
+## Available Tools
 
-### 📊 **Design Token Extraction**
+### **Design Token Extraction**
 - `get_figma_data` - Extract complete Figma file structure and design data
 - `download_figma_images` - Download images, icons, and graphics from Figma
-- `get_figma_variables` - Get Figma Variables (Enterprise plans only)
+- `get_figma_variables` - Get Figma Variables (IMPORTANT: Enterprise plans only)
 - `generate_design_tokens` - Extract and structure design tokens (colors, typography, spacing, effects)
 
 ### 🔍 **Component Intelligence & Code Generation**
@@ -378,8 +378,8 @@ To access these tools in your AI agent, use these prompts:
 
 The `get_figma_variables` function requires a **Figma Enterprise plan**. This limitation is imposed by Figma, not by this MCP server:
 
-- ✅ **Available on ALL plans**: `get_figma_data`, `download_figma_images`, `generate_design_tokens`, `generate_design_system_doc`
-- ❌ **Enterprise only**: `get_figma_variables` (Variables REST API access)
+- **Available on ALL plans**: `get_figma_data`, `download_figma_images`, `generate_design_tokens`, `generate_design_system_doc`
+- **Enterprise only**: `get_figma_variables` (Variables REST API access)
 
 **Why this limitation exists:**
 - Figma restricts Variables API access to Enterprise plans only
