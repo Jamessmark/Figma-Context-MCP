@@ -38,7 +38,11 @@
 
 ## **What Makes This Different**
 
-This isn't just another Figma data extractor. It's an **intelligent design-to-code system** that understands your components like a senior developer would:
+This isn't just another Figma data extractor. It's an **intelligent design system generation, analysis and documentation platform** that provides deep insights into your Figma files:
+
+### **Comprehensive Design System Documentation Generation**
+- **Unique End-to-End Solution**: The *only* MCP that automatically generates rich, multi-faceted design system documentation from a Figma link. This includes component deep-dives, interactive overviews, validation reports, accessibility checks, and token specifications, all intelligently integrated.
+- **Living Design System Hub**: Transforms static Figma files into a dynamic, explorable, and maintainable design system knowledge base.
 
 ### **Component Intelligence**
 - **Semantic Understanding**: Analyzes Figma components to understand their structure, variants, and relationships
@@ -46,11 +50,12 @@ This isn't just another Figma data extractor. It's an **intelligent design-to-co
 - **Atomic Design Classification**: Organizes components into atoms, molecules, organisms for scalable architecture
 - **Implementation Readiness**: Tells you which components are ready to build vs. need more specification
 
-### **AI-Optimized Workflows**
+### **AI-Optimized Workflows & Developer Experience**
 - **Perfect for AI Agents**: Cursor, Claude, and other AI tools get semantic component data instead of raw JSON
 - **One-Command Setup**: From Figma link to complete design system documentation and tokens
 - **Design-Code Sync**: Automated checking to ensure design and implementation stay aligned
 - **Accessibility Built-in**: WCAG compliance checking and proper ARIA roles included automatically
+- **Streamlined Operations**: From Figma link to a full suite of design system assets – tokens, comprehensive documentation, and validation reports – with minimal effort.
 
 Give [Cursor](https://cursor.sh/) and other AI-powered coding tools access to your Figma files with this [Model Context Protocol](https://modelcontextprotocol.io/introduction) server, **Figma MCP Server by Bao To**.
 
