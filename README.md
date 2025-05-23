@@ -75,35 +75,76 @@ The `get_figma_variables` function requires a **Figma Enterprise plan**. This li
 - This is a business decision by Figma to drive Enterprise sales
 
 **Alternatives for non-Enterprise users:**
-- Use `generate_design_tokens` - extracts similar styling information from your designs
+- Use `generate_design_tokens` with `includeDeducedVariables: true` - analyzes design tokens to create variable-like structures (NEW workaround feature)
+- Use `generate_design_tokens` (standard) - extracts similar styling information from your designs
 - Use Figma's Plugin API (requires building a custom plugin)
 - Manually export variables from Figma UI
 
 For more details, see [Figma's official documentation on plan features](https://help.figma.com/hc/en-us/articles/360040328273-Figma-plans-and-features).
 
-## Key Features & Advantages
+## Key Features
 
-While other Figma MCP servers can provide basic node information, **Figma MCP Server by Bao To** offers superior capabilities for understanding and utilizing your design system:
+*   🔍 **Comprehensive Design Data Extraction (`get_figma_data`)**:
+    *   Retrieves complete Figma file structure and component data in a streamlined format.
+    *   Includes node hierarchy, styling information, layout constraints, and component definitions.
+    *   Provides the foundation for AI-driven design analysis and code generation.
 
-*   **Comprehensive Design Data Extraction (`get_figma_data`)**: Fetches detailed information about your Figma files or specific nodes, simplifying complex Figma structures into a more digestible format for AI.
-*   **Precise Image Downloads (`download_figma_images`)**: Allows targeted downloading of specific image assets (SVGs, PNGs) from your Figma files.
-*   ⭐ **Figma Variables Extraction (`get_figma_variables`)** ⚠️ **Requires Figma Enterprise Plan**:
-    *   Retrieves all variables and variable collections directly from your Figma file using Figma's Variables API.
-    *   **⚠️ IMPORTANT**: This feature only works with **Figma Enterprise plans**. Users on Starter, Professional, or Organization plans will receive a 403 Forbidden error when trying to access variables via the REST API.
-    *   Variables are Figma's dynamic values system that can store colors, numbers, strings, and booleans with different modes/themes.
-    *   Different from design tokens: Variables are a specific Figma feature for creating dynamic, mode-aware values, while design tokens are extracted style values from the design.
-    *   Supports both local variables (all variables in the file) and published variables (those published to team library).
-    *   Outputs structured data showing variable collections, modes, and values for each mode.
-    *   **Alternative**: For non-Enterprise users, use the `generate_design_tokens` function which extracts similar styling information and works on all Figma plans.
+*   🖼️ **Smart Image and Icon Handling (`download_figma_images`)**:
+    *   Downloads SVG and PNG images directly from Figma components and frames.
+    *   Automatically handles image fills and vector graphics with proper local file management.
+    *   Essential for creating complete, asset-ready implementations of your designs.
+
+*   🔧 **Advanced Variables System (`get_figma_variables`)** ⚠️ **[Enterprise Plans Only]**:
+    *   Extracts Figma's dynamic Variables (colors, numbers, strings, booleans) with full mode/theme support.
+    *   Retrieves variable collections and their values across different modes (light/dark themes, device variants, etc.).
+    *   Provides structured data showing how variables change across different contexts and modes.
+
 *   ⭐ **Automated Design Token Generation (`generate_design_tokens`)**:
     *   Extracts crucial design tokens (colors, typography, spacing, effects) directly from your Figma file.
     *   Outputs a structured JSON file, ready to be integrated into your development workflow or used by AI to ensure design consistency.
-*   ⭐ **Intelligent Design System Documentation (`generate_design_system_doc`)**:
-    *   Goes beyond simple node data by generating comprehensive, multi-file Markdown documentation for your entire design system as defined in Figma.
-    *   Creates an organized structure including an overview, detailed pages for global styles (colors, typography, effects, layout), and component/node information per Figma canvas.
-    *   This tool was a key motivation for this fork. By generating this comprehensive design system documentation *directly within your project repository*, it provides AI agents with a deep, contextual understanding of your project's specific design language. This empowers them to understand not just individual elements but the relationships and rules of your design system, leading to more accurate, consistent, and contextually aware UI implementation and freeing you from manual design interpretation.
+    *   **NEW: Variable Deduction Capability** - Can optionally analyze design tokens to deduce variable-like structures as a workaround for the Enterprise-only Variables API limitation.
+    *   When enabled via `includeDeducedVariables: true`, provides:
+        *   Pattern-based variable grouping (e.g., detecting `primary-500`, `primary-400` color scales)
+        *   Inferred variable collections (Colors, Typography, Spacing)
+        *   Usage context analysis (e.g., border-color vs. background-color)
+        *   Variables API-compatible output format
 
-These advanced features make this server particularly powerful for tasks requiring a deep understanding of the design system, such as generating themed components or ensuring adherence to brand guidelines during UI development.
+*   📖 **Complete Design System Documentation (`generate_design_system_doc`)**:
+    *   Generates comprehensive Markdown documentation for your entire design system.
+    *   Creates organized sections for components, global styles, typography scales, color palettes, and spacing systems.
+    *   Includes usage examples, component specifications, and design guidelines in a developer-friendly format.
+
+## 🎯 **NEW: Advanced Design System Tools**
+
+*   🔄 **Design Token Comparison (`compare_design_tokens`)**:
+    *   Compare design tokens between different Figma files or versions
+    *   Identifies added, removed, and modified tokens with detailed change tracking
+    *   Perfect for design system version control and migration planning
+    *   Outputs structured comparison reports for team collaboration
+
+*   ✅ **Design System Validation (`validate_design_system`)**:
+    *   Validates design tokens against design system best practices and rules
+    *   Checks color naming conventions, typography scale consistency, spacing patterns
+    *   Identifies potential issues and inconsistencies before they reach production
+    *   Provides actionable recommendations for design system improvements
+
+*   ♿ **Accessibility Compliance Checker (`check_accessibility`)**:
+    *   Analyzes design tokens for accessibility compliance issues
+    *   Checks text sizes, color contrasts, touch target sizes
+    *   Provides specific suggestions for WCAG compliance improvements
+    *   Essential for building inclusive, accessible digital products
+
+*   🔄 **Multi-Format Token Migration (`migrate_tokens`)**:
+    *   Convert design tokens to popular formats: Tailwind, CSS Variables, Style Dictionary, Figma Tokens
+    *   Seamless integration with existing development workflows and tools
+    *   Maintains token relationships and semantic meaning across formats
+    *   Supports batch conversion for large design systems
+
+*   🔗 **Design-Code Sync Checker (`check_design_code_sync`)**:
+    *   Compare Figma design tokens with your actual codebase tokens
+    *   Identifies discrepancies between design specifications and implementation
+    *   Supports JSON, JavaScript, and TypeScript token file formats
+    *   Helps maintain perfect alignment between design and development
 
 ## Using This Server with Your AI Agent
 
@@ -117,6 +158,7 @@ To leverage the full power of **Figma MCP Server by Bao To**, especially its des
     *   To get basic Figma data: *"Get the Figma data for [Figma link]."* (The agent will likely use `get_figma_data`).
     *   **To get Figma variables** ⚠️ **Enterprise Only**: *"Get the variables from [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should then call the `get_figma_variables` tool. **Note**: This only works with Figma Enterprise plans.
     *   **To generate design tokens**: *"Generate the design tokens for [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should then call the `generate_design_tokens` tool.
+    *   **To generate design tokens with deduced variables**: *"Generate the design tokens for [Figma link] with deduced variables analysis using the 'Figma MCP Server by Bao To'."* The agent should call `generate_design_tokens` with `includeDeducedVariables: true`. This provides a workaround for non-Enterprise users to get variable-like structures.
     *   **To generate design system documentation**: *"Generate the design system documentation for [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should then call the `generate_design_system_doc` tool.
 
 3.  **Provide Necessary Parameters**:
@@ -299,3 +341,20 @@ Border: 1px solid var(--stroke-primary-light)
 The AI will also generate additional documentation to help developers use the semantic tokens correctly, including usage guidelines and examples for different contexts (components, themes, etc.).
 
 ## Contributing
+
+To access these tools in your AI agent, use these prompts:
+
+*   **To extract comprehensive design data**: *"Analyze the design system from [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should then call the `get_figma_data` tool.
+*   **To download specific images**: *"Download the icons and images from [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should then call the `download_figma_images` tool.
+*   **To extract variables (Enterprise only)**: *"Get the variables from [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should then call the `get_figma_variables` tool.
+*   **To generate design tokens**: *"Generate the design tokens for [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should then call the `generate_design_tokens` tool.
+*   **To generate design tokens with deduced variables**: *"Generate the design tokens for [Figma link] with deduced variables analysis using the 'Figma MCP Server by Bao To'."* The agent should call `generate_design_tokens` with `includeDeducedVariables: true`. This provides a workaround for non-Enterprise users to get variable-like structures.
+*   **To generate comprehensive documentation**: *"Generate design system documentation for [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should then call the `generate_design_system_doc` tool.
+
+## 🎯 **Advanced Design System Tools Usage**
+
+*   **To compare design tokens between versions**: *"Compare the design tokens between [Figma link 1] and [Figma link 2] using the 'Figma MCP Server by Bao To'."* The agent should call the `compare_design_tokens` tool.
+*   **To validate design system compliance**: *"Validate the design system compliance for [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should call the `validate_design_system` tool.
+*   **To check accessibility compliance**: *"Check the accessibility compliance for [Figma link] using the 'Figma MCP Server by Bao To'."* The agent should call the `check_accessibility` tool.
+*   **To migrate tokens to different formats**: *"Convert the design tokens from [Figma link] to Tailwind format using the 'Figma MCP Server by Bao To'."* The agent should call the `migrate_tokens` tool with the desired target format.
+*   **To check design-code sync**: *"Check if the design tokens from [Figma link] are in sync with my code tokens file at [file path] using the 'Figma MCP Server by Bao To'."* The agent should call the `check_design_code_sync` tool.

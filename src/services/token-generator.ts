@@ -23,6 +23,9 @@ interface DesignTokens {
   // Add other token categories as needed (e.g., borderRadius, borderWidths, etc.)
 }
 
+// Export the interface for use in other files
+export type { DesignTokens };
+
 function categorizeStyle(styleId: string, styleDefinition: StyleTypes, globalVars?: GlobalVars): { category: keyof DesignTokens | null; name: string; token: any } {
   let baseName = styleId; // Use the styleId directly as the base for the name to be processed.
 

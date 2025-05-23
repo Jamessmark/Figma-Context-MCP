@@ -1,5 +1,54 @@
 # figma-developer-mcp
 
+## [0.6.22] - 2025-01-24
+
+### Added
+- **New Variable Deduction Feature**: Enhanced `generate_design_tokens` with optional variable analysis capability
+  - Added new `includeDeducedVariables` parameter to `generate_design_tokens` tool
+  - Analyzes design tokens to deduce variable-like structures as a workaround for Enterprise-only Variables API limitation
+  - Provides pattern-based variable grouping (e.g., detecting `primary-500`, `primary-400` color scales)
+  - Infers variable collections for Colors, Typography, and Spacing
+  - Includes usage context analysis (e.g., border-color vs. background-color)
+  - Outputs Variables API-compatible format for integration
+  - Clear documentation of limitations compared to real Figma Variables
+
+- **5 New Advanced Design System Tools**:
+  - **`compare_design_tokens`**: Compare design tokens between different Figma files or versions with detailed change tracking
+  - **`validate_design_system`**: Validate design tokens against best practices (naming conventions, typography scale, spacing patterns)
+  - **`check_accessibility`**: Analyze design tokens for accessibility compliance (text sizes, color contrast, WCAG guidelines)
+  - **`migrate_tokens`**: Convert design tokens to popular formats (Tailwind, CSS Variables, Style Dictionary, Figma Tokens)
+  - **`check_design_code_sync`**: Compare Figma design tokens with codebase tokens to identify sync issues
+
+### Enhanced
+- **Major Accessibility Checker Improvements**:
+  - **Real WCAG contrast ratio calculations** using official luminance formulas
+  - **Comprehensive text analysis**: font weight, line height, and size validation
+  - **Smart color pair detection**: automatically finds and tests text/background combinations
+  - **Touch target validation**: checks spacing tokens for minimum 44px touch targets
+  - **Color-only information detection**: warns when status colors lack alternative indicators
+  - **Enhanced suggestions**: specific, actionable recommendations for WCAG compliance
+  - **Support for hex color formats**: 3-digit and 6-digit hex colors with proper conversion
+  - **Large text detection**: applies appropriate contrast thresholds (3:1 vs 4.5:1)
+  - **Known problematic color database**: detects commonly problematic color choices
+
+### Technical Changes
+- Added new `variable-deduction.ts` service with intelligent pattern analysis
+- Added new `design-system-tools.ts` service with 5 comprehensive design system utilities
+- Enhanced `generate_design_tokens` with optional variable deduction capability
+- **Enhanced accessibility functions**: `calculateContrastRatio()`, `getRelativeLuminance()`, `hexToRgb()`, `isLowContrastColor()`
+- Updated all documentation (README.md, international READMEs) with new features and usage instructions
+- Fixed TypeScript import/export issues for better modularity
+- Added proper error handling and validation for all new tools
+- Comprehensive testing and build verification
+
+### Enhanced Capabilities
+- Professional design system management and validation
+- Multi-format token conversion and migration
+- Design-code synchronization checking
+- Accessibility compliance verification
+- Version control support for design tokens
+- Enterprise-level design system tooling
+
 ## 0.2.2
 
 ### Patch Changes

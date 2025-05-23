@@ -10,10 +10,19 @@ import path from "path";
 import os from "os";
 import { Logger } from "./utils/logger.js";
 import url from "url";
+import { deduceVariablesFromTokens, formatAsVariablesResponse } from "./services/variable-deduction.js";
+import { 
+  compareDesignTokens, 
+  validateDesignSystem, 
+  checkAccessibility, 
+  migrateTokens, 
+  checkDesignCodeSync 
+} from "./services/design-system-tools.js";
+import fsPromises from "fs/promises";
 
 const serverInfo = {
   name: "Figma MCP Server by Bao To",
-  version: "0.6.22",
+  version: "0.6.23",
 };
 
 const serverOptions = {
@@ -256,8 +265,15 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         .describe(
           "Optional full path (including filename) where the output JSON file should be saved. If not provided, it will be saved in a temporary directory.",
         ),
+      includeDeducedVariables: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe(
+          "Whether to include deduced variables analysis as a workaround for Enterprise-only Variables API. This analyzes design tokens to create variable-like structures but has limitations compared to real Figma Variables.",
+        ),
     },
-    async ({ fileKey, outputFilePath }) => {
+    async ({ fileKey, outputFilePath, includeDeducedVariables }) => {
       try {
         Logger.log(`Generating design tokens for file: ${fileKey}`);
         const simplifiedDesign = await figmaService.getFile(fileKey);
@@ -266,11 +282,24 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         const tokens = generateTokensFromSimplifiedDesign(simplifiedDesign);
         Logger.log("Design tokens generated.");
 
+        let output: any = { designTokens: tokens };
+
+        // Optionally include deduced variables analysis
+        if (includeDeducedVariables) {
+          Logger.log("Analyzing design tokens to deduce variable-like structures...");
+          const deducedVariables = deduceVariablesFromTokens(tokens);
+          output.deducedVariables = deducedVariables;
+          output.variablesApiCompatible = formatAsVariablesResponse(deducedVariables);
+          Logger.log(`Deduced ${deducedVariables.metadata.totalVariables} variables from design tokens.`);
+        }
+
         let resolvedOutputFilePath: string;
         const safeFileNameBase = simplifiedDesign.name 
             ? simplifiedDesign.name.replace(/[\/\s<>:"\\|?*]+/g, '_') 
             : 'untitled_figma_design';
-        const outputFileName = `${safeFileNameBase}_tokens.json`;
+        const outputFileName = includeDeducedVariables 
+            ? `${safeFileNameBase}_tokens_with_variables.json`
+            : `${safeFileNameBase}_tokens.json`;
 
         if (outputFilePath) {
           resolvedOutputFilePath = outputFilePath;
@@ -284,14 +313,25 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
           Logger.log(`outputFilePath not provided, using temporary path: ${resolvedOutputFilePath}`);
         }
 
-        fs.writeFileSync(resolvedOutputFilePath, JSON.stringify(tokens, null, 2));
-        Logger.log(`Design tokens successfully generated and saved to: ${resolvedOutputFilePath}`);
+        fs.writeFileSync(resolvedOutputFilePath, JSON.stringify(output, null, 2));
+        
+        let successMessage = `Design tokens successfully generated and saved to: ${resolvedOutputFilePath}`;
+        if (includeDeducedVariables) {
+          const deducedVars = output.deducedVariables;
+          successMessage += `\n\nDeduced Variables Analysis included:`;
+          successMessage += `\n- Total variables: ${deducedVars.metadata.totalVariables}`;
+          successMessage += `\n- Collections: ${deducedVars.collections.map((c: any) => c.name).join(', ')}`;
+          successMessage += `\n- Limitations: This is a workaround analysis with limitations compared to real Figma Variables`;
+          successMessage += `\n  - ${deducedVars.metadata.limitations.join('\n  - ')}`;
+        }
+        
+        Logger.log(successMessage);
 
         return {
           content: [
             {
               type: "text",
-              text: `Design tokens successfully generated and saved to: ${resolvedOutputFilePath}`,
+              text: successMessage,
             },
           ],
         };
@@ -371,6 +411,321 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         };
       }
     },
+  );
+
+  // Tool 6: Compare design tokens between versions/files
+  server.tool(
+    "compare_design_tokens",
+    "Compare design tokens between two Figma files or token sets to identify changes, additions, and removals.",
+    {
+      fileKey1: z
+        .string()
+        .describe("The key of the first Figma file for comparison."),
+      fileKey2: z
+        .string()
+        .describe("The key of the second Figma file for comparison."),
+      outputFilePath: z
+        .string()
+        .optional()
+        .describe("Optional path to save the comparison results as JSON."),
+    },
+    async (request) => {
+      const { fileKey1, fileKey2, outputFilePath } = request;
+
+      try {
+        // Generate tokens from both files
+        const simplifiedData1 = await figmaService.getFile(fileKey1);
+        const tokens1 = generateTokensFromSimplifiedDesign(simplifiedData1);
+        
+        const simplifiedData2 = await figmaService.getFile(fileKey2);
+        const tokens2 = generateTokensFromSimplifiedDesign(simplifiedData2);
+
+        // Compare the tokens
+        const comparison = await compareDesignTokens(tokens1, tokens2, outputFilePath);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Token Comparison Results:
+              
+📊 **Summary:**
+- Added: ${comparison.added.length} tokens
+- Removed: ${comparison.removed.length} tokens  
+- Modified: ${comparison.modified.length} tokens
+- Unchanged: ${comparison.unchanged.length} tokens
+
+${comparison.added.length > 0 ? `\n➕ **Added Tokens:**\n${comparison.added.map(t => `- ${t}`).join('\n')}` : ''}
+
+${comparison.removed.length > 0 ? `\n➖ **Removed Tokens:**\n${comparison.removed.map(t => `- ${t}`).join('\n')}` : ''}
+
+${comparison.modified.length > 0 ? `\n🔄 **Modified Tokens:**\n${comparison.modified.map(t => `- ${t.name}: ${t.changes.join(', ')}`).join('\n')}` : ''}
+
+${outputFilePath ? `\n💾 **Results saved to:** ${outputFilePath}` : ''}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `❌ Error comparing design tokens: ${error instanceof Error ? error.message : "Unknown error"}`,
+            },
+          ],
+        };
+      }
+    }
+  );
+
+  // Tool 7: Validate design system compliance
+  server.tool(
+    "validate_design_system",
+    "Validate design tokens against design system best practices and rules.",
+    {
+      fileKey: z
+        .string()
+        .describe("The key of the Figma file to validate."),
+      outputFilePath: z
+        .string()
+        .optional()
+        .describe("Optional path to save the validation results as JSON."),
+    },
+    async (request) => {
+      const { fileKey, outputFilePath } = request;
+
+      try {
+        const simplifiedData = await figmaService.getFile(fileKey);
+        const tokens = generateTokensFromSimplifiedDesign(simplifiedData);
+        const validation = validateDesignSystem(tokens);
+
+        if (outputFilePath) {
+          await fsPromises.writeFile(outputFilePath, JSON.stringify(validation, null, 2), 'utf-8');
+        }
+
+        const status = validation.passed ? "✅ PASSED" : "❌ FAILED";
+        
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Design System Validation Results: ${status}
+
+📊 **Summary:**
+- Total Checks: ${validation.summary.totalChecks}
+- Passed: ${validation.summary.passed}
+- Failed: ${validation.summary.failed}  
+- Warnings: ${validation.summary.warnings}
+
+${validation.errors.length > 0 ? `\n🚫 **Errors:**\n${validation.errors.map(e => `- [${e.rule}] ${e.component}: ${e.issue}`).join('\n')}` : ''}
+
+${validation.warnings.length > 0 ? `\n⚠️ **Warnings:**\n${validation.warnings.map(w => `- [${w.rule}] ${w.component}: ${w.issue}`).join('\n')}` : ''}
+
+${outputFilePath ? `\n💾 **Results saved to:** ${outputFilePath}` : ''}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `❌ Error validating design system: ${error instanceof Error ? error.message : "Unknown error"}`,
+            },
+          ],
+        };
+      }
+    }
+  );
+
+  // Tool 8: Check accessibility compliance
+  server.tool(
+    "check_accessibility",
+    "Check design tokens for accessibility compliance issues (contrast, text sizes, etc.).",
+    {
+      fileKey: z
+        .string()
+        .describe("The key of the Figma file to check for accessibility."),
+      outputFilePath: z
+        .string()
+        .optional()
+        .describe("Optional path to save the accessibility report as JSON."),
+    },
+    async (request) => {
+      const { fileKey, outputFilePath } = request;
+
+      try {
+        const simplifiedData = await figmaService.getFile(fileKey);
+        const tokens = generateTokensFromSimplifiedDesign(simplifiedData);
+        const issues = checkAccessibility(tokens);
+
+        if (outputFilePath) {
+          await fsPromises.writeFile(outputFilePath, JSON.stringify(issues, null, 2), 'utf-8');
+        }
+
+        const errorCount = issues.filter(i => i.severity === 'error').length;
+        const warningCount = issues.filter(i => i.severity === 'warning').length;
+        const status = errorCount === 0 ? "✅ PASSED" : "❌ FAILED";
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Accessibility Check Results: ${status}
+
+📊 **Summary:**
+- Total Issues: ${issues.length}
+- Errors: ${errorCount}
+- Warnings: ${warningCount}
+
+${issues.length > 0 ? `\n🔍 **Issues Found:**\n${issues.map(issue => `${issue.severity === 'error' ? '🚫' : '⚠️'} [${issue.type}] ${issue.component}: ${issue.issue}\n   💡 ${issue.suggestion}`).join('\n\n')}` : '\n🎉 **No accessibility issues found!**'}
+
+${outputFilePath ? `\n💾 **Report saved to:** ${outputFilePath}` : ''}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `❌ Error checking accessibility: ${error instanceof Error ? error.message : "Unknown error"}`,
+            },
+          ],
+        };
+      }
+    }
+  );
+
+  // Tool 9: Migrate tokens to different formats
+  server.tool(
+    "migrate_tokens",
+    "Convert design tokens to different formats (Tailwind, CSS Variables, Style Dictionary, Figma Tokens).",
+    {
+      fileKey: z
+        .string()
+        .describe("The key of the Figma file containing the tokens to migrate."),
+      targetFormat: z
+        .enum(["tailwind", "css-variables", "style-dictionary", "figma-tokens"])
+        .describe("The target format to convert tokens to."),
+      outputFilePath: z
+        .string()
+        .describe("The path where the converted tokens should be saved."),
+    },
+    async (request) => {
+      const { fileKey, targetFormat, outputFilePath } = request;
+
+      try {
+        const simplifiedData = await figmaService.getFile(fileKey);
+        const tokens = generateTokensFromSimplifiedDesign(simplifiedData);
+        const result = await migrateTokens(tokens, targetFormat, outputFilePath);
+
+        if (result.success) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `✅ Token Migration Successful!
+
+📦 **Details:**
+- Format: ${result.format}
+- Tokens Processed: ${result.summary.tokensProcessed}
+- Output File: ${result.outputPath}
+
+🎉 Your design tokens have been successfully converted to ${targetFormat} format and saved to ${outputFilePath}!`,
+              },
+            ],
+          };
+        } else {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `❌ Token Migration Failed!
+
+🚫 **Errors:**
+${result.summary.errors.map(e => `- ${e}`).join('\n')}`,
+              },
+            ],
+          };
+        }
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `❌ Error migrating tokens: ${error instanceof Error ? error.message : "Unknown error"}`,
+            },
+          ],
+        };
+      }
+    }
+  );
+
+  // Tool 10: Check design-code sync
+  server.tool(
+    "check_design_code_sync",
+    "Compare Figma design tokens with code tokens to identify sync issues between design and implementation.",
+    {
+      fileKey: z
+        .string()
+        .describe("The key of the Figma file to compare."),
+      codeTokensPath: z
+        .string()
+        .describe("Path to the code tokens file (JSON, JS, or TS format)."),
+      outputFilePath: z
+        .string()
+        .optional()
+        .describe("Optional path to save the sync comparison results."),
+    },
+    async (request) => {
+      const { fileKey, codeTokensPath, outputFilePath } = request;
+
+      try {
+        const simplifiedData = await figmaService.getFile(fileKey);
+        const figmaTokens = generateTokensFromSimplifiedDesign(simplifiedData);
+        const syncResult = await checkDesignCodeSync(figmaTokens, codeTokensPath);
+
+        if (outputFilePath) {
+          await fsPromises.writeFile(outputFilePath, JSON.stringify(syncResult, null, 2), 'utf-8');
+        }
+
+        const totalChanges = syncResult.added.length + syncResult.removed.length + syncResult.modified.length;
+        const status = totalChanges === 0 ? "✅ IN SYNC" : "🔄 OUT OF SYNC";
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Design-Code Sync Check: ${status}
+
+📊 **Summary:**
+- In Sync: ${syncResult.unchanged.length} tokens
+- Need Updates: ${totalChanges} tokens
+
+${syncResult.added.length > 0 ? `\n➕ **Missing in Code:**\n${syncResult.added.map(t => `- ${t}`).join('\n')}` : ''}
+
+${syncResult.removed.length > 0 ? `\n➖ **Extra in Code:**\n${syncResult.removed.map(t => `- ${t}`).join('\n')}` : ''}
+
+${syncResult.modified.length > 0 ? `\n🔄 **Value Differences:**\n${syncResult.modified.map(t => `- ${t.name}: ${t.changes.join(', ')}`).join('\n')}` : ''}
+
+${totalChanges === 0 ? '\n🎉 **Perfect sync!** Your design and code tokens are aligned.' : '\n💡 **Action needed:** Update your code tokens to match the design.'}
+
+${outputFilePath ? `\n💾 **Results saved to:** ${outputFilePath}` : ''}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `❌ Error checking design-code sync: ${error instanceof Error ? error.message : "Unknown error"}`,
+            },
+          ],
+        };
+      }
+    }
   );
 }
 
