@@ -1,20 +1,26 @@
-# Framelink Figma MCP Server Codebase Overview
+# Figma MCP Server by Bao To Codebase Overview
 
-This document provides a comprehensive overview of the `figma-developer-mcp` codebase, a Node.js application written in TypeScript. It acts as a Model Context Protocol (MCP) server to provide Figma design data to AI coding agents like Cursor, enabling them to better understand and implement designs.
+This document provides a comprehensive overview of the `@tothienbao6a0/figma-mcp-server` codebase (a fork and enhancement of the original `figma-developer-mcp`), a Node.js application written in TypeScript. It acts as an advanced Model Context Protocol (MCP) server to provide Figma design data, comprehensive design system analysis, and component intelligence to AI coding agents like Cursor, enabling them to better understand, document, and implement designs.
 
 ## 1. Project Purpose & High-Level Architecture
 
-The primary goal of this project is to bridge the gap between Figma designs and AI-assisted code generation. It exposes an MCP server that AI tools can query to get structured and simplified information about Figma files and nodes.
+The primary goal of this project is to create a powerful bridge between Figma designs and AI-assisted code generation and design system management. It exposes an MCP server that AI tools can query for:
+*   Structured and simplified information about Figma files and nodes.
+*   Extracted design tokens in various formats.
+*   Figma Variables (for Enterprise users).
+*   Automatically generated design system documentation.
+*   In-depth component analysis for AI-driven development.
+*   Tools for design system validation, comparison, accessibility checking, and code-design synchronization.
 
 **Key functionalities:**
 
-*   **Figma API Interaction:** Fetches raw data from the Figma REST API (file structure, node details, images).
+*   **Figma API Interaction:** Fetches raw data from the Figma REST API (file structure, node details, images, variables).
 *   **Data Simplification:** Transforms the verbose Figma API response into a more concise, AI-friendly format (`SimplifiedDesign`, `SimplifiedNode`). This involves:
     *   Extracting essential layout, style, and text properties.
     *   De-duplicating common styles (colors, text styles, layouts, effects) by storing them in a `globalVars` object and referencing them by ID from individual nodes. This significantly reduces the token count for AI models.
-*   **MCP Server Implementation:** Provides two main tools for AI agents:
-    *   `get_figma_data`: Fetches design information for a whole file or specific nodes.
-    *   `download_figma_images`: Downloads images (PNGs, SVGs, image fills) from Figma.
+*   **MCP Server Implementation:** Provides a comprehensive suite of tools for AI agents (detailed in section 3.2).
+*   **Advanced Design System Analysis:** Offers tools for token generation, documentation, validation, comparison, and more.
+*   **Component Intelligence:** Analyzes Figma components to understand structure, variants, and relationships for smarter code generation.
 *   **Communication Protocols:** Supports two modes of operation for the MCP server:
     *   **stdio:** For direct integration with tools like Cursor via standard input/output.
     *   **HTTP/SSE:** For network-based communication, using Express.js to handle HTTP requests and Server-Sent Events (SSE) for streaming responses.
@@ -25,11 +31,16 @@ The primary goal of this project is to bridge the gap between Figma designs and 
 .
 ├── .changeset/       # Changeset files for versioning and changelogs
 ├── .github/          # GitHub-specific files (e.g., workflows)
-├── docs/             # Documentation files
+├── docs/             # Documentation files (can also be an output for generated docs)
 ├── src/              # Source code
-│   ├── services/     # Services for interacting with external APIs (Figma) and simplifying data
+│   ├── services/     # Services for interacting with Figma, simplifying data, and implementing tool logic
 │   │   ├── figma.ts
-│   │   └── simplify-node-response.ts
+│   │   ├── simplify-node-response.ts
+│   │   ├── token-generator.ts
+│   │   ├── doc-generator.ts
+│   │   ├── variable-deduction.ts
+│   │   ├── design-system-tools.ts
+│   │   └── component-analysis.ts
 │   ├── tests/        # Test files
 │   ├── transformers/ # Modules for transforming specific Figma properties
 │   │   ├── effects.ts
@@ -107,50 +118,111 @@ The primary goal of this project is to bridge the gap between Figma designs and 
         *   Instantiates `McpServer` from `@modelcontextprotocol/sdk`.
         *   Initializes `FigmaService` with the API key.
         *   Calls `registerTools()` to define the tools available to the AI client.
-    *   `registerTools()` defines two main tools using `zod` for schema validation:
+    *   `registerTools()` defines the following tools using `zod` for schema validation:
         1.  **`get_figma_data`**:
             *   **Purpose**: Fetches and simplifies Figma file or node data.
-            *   **Parameters**: `fileKey` (string, required), `nodeId` (string, optional), `depth` (number, optional).
-            *   **Logic**:
-                *   Calls `figmaService.getNode()` or `figmaService.getFile()`.
-                *   Converts the `SimplifiedDesign` result to YAML using `js-yaml`.
-                *   Returns the YAML content.
-                *   Includes error handling.
+            *   **Parameters**: `fileKey`, `nodeId` (optional), `depth` (optional).
+            *   **Logic**: Uses `figmaService` to get data, converts to YAML.
         2.  **`download_figma_images`**:
             *   **Purpose**: Downloads images (SVG, PNG) from Figma.
-            *   **Parameters**: `fileKey` (string, required), `nodes` (array of objects with `nodeId`, optional `imageRef`, `fileName`), `localPath` (string, required).
-            *   **Logic**:
-                *   Differentiates between image fills (using `imageRef`) and rendered nodes.
-                *   Calls `figmaService.getImageFills()` and `figmaService.getImages()`.
-                *   Returns a success/failure message.
+            *   **Parameters**: `fileKey`, `nodes` (array with `nodeId`, `imageRef`, `fileName`), `localPath`.
+            *   **Logic**: Uses `figmaService` to fetch and save images.
+        3.  **`get_figma_variables`**:
+            *   **Purpose**: Retrieves Figma Variables (primarily for Enterprise plans).
+            *   **Parameters**: `fileKey`, `scope` (optional: "local" or "published"), `outputFilePath` (optional).
+            *   **Logic**: Calls `figmaService.getVariables()`. Output can be YAML in response or saved to a JSON file.
+        4.  **`generate_design_tokens`**:
+            *   **Purpose**: Extracts design tokens (colors, typography, etc.).
+            *   **Parameters**: `fileKey`, `outputFilePath` (optional), `includeDeducedVariables` (optional boolean).
+            *   **Logic**: Uses `figmaService.getFile()` then `generateTokensFromSimplifiedDesign()` (from `token-generator.ts`). Can include deduced variables via `variable-deduction.ts`. Saves to JSON file.
+        5.  **`generate_design_system_doc`**:
+            *   **Purpose**: Generates comprehensive Markdown design system documentation.
+            *   **Parameters**: `fileKey`, `outputDirectoryPath` (optional).
+            *   **Logic**: Uses `figmaService.getFile()` then `generateStructuredDesignSystemDocumentation()` (from `doc-generator.ts`). Saves Markdown files to a directory.
+        6.  **`compare_design_tokens`**:
+            *   **Purpose**: Compares design tokens between two Figma files.
+            *   **Parameters**: `fileKey1`, `fileKey2`, `outputFilePath` (optional).
+            *   **Logic**: Generates tokens for both files, then uses `compareDesignTokens()` (from `design-system-tools.ts`).
+        7.  **`validate_design_system`**:
+            *   **Purpose**: Validates design tokens against best practices.
+            *   **Parameters**: `fileKey`, `outputFilePath` (optional).
+            *   **Logic**: Generates tokens, then uses `validateDesignSystem()` (from `design-system-tools.ts`).
+        8.  **`check_accessibility`**:
+            *   **Purpose**: Checks design tokens for accessibility compliance (WCAG).
+            *   **Parameters**: `fileKey`, `outputFilePath` (optional).
+            *   **Logic**: Generates tokens, then uses `checkAccessibility()` (from `design-system-tools.ts`).
+        9.  **`migrate_tokens`**:
+            *   **Purpose**: Converts design tokens to different formats (Tailwind, CSS Vars, etc.).
+            *   **Parameters**: `fileKey`, `targetFormat`, `outputFilePath`.
+            *   **Logic**: Generates tokens, then uses `migrateTokens()` (from `design-system-tools.ts`).
+        10. **`check_design_code_sync`**:
+            *   **Purpose**: Compares Figma design tokens with code tokens.
+            *   **Parameters**: `fileKey`, `codeTokensPath`, `outputFilePath` (optional).
+            *   **Logic**: Generates Figma tokens, then uses `checkDesignCodeSync()` (from `design-system-tools.ts`).
+        11. **`analyze_figma_components`**:
+            *   **Purpose**: Analyzes Figma components for structure, variants, props for AI code generation.
+            *   **Parameters**: `fileKey`, `outputFilePath` (optional).
+            *   **Logic**: Uses `figmaService.getFile()` then `analyzeComponents()` (from `component-analysis.ts`).
 
 ### 3.3. Figma Interaction & Data Simplification
 
 *   **`src/services/figma.ts` (`FigmaService` class)**:
     *   Handles all direct communication with the Figma REST API (`https://api.figma.com/v1`).
     *   `constructor(apiKey)`: Stores the Figma API key.
-    *   `request<T>(endpoint)`: Private helper for making authenticated GET requests to the Figma API using `fetch`. Includes error handling and a check for `fetch` availability (Node.js v18+).
+    *   `request<T>(endpoint)`: Private helper for making authenticated GET requests.
     *   `getFile(fileKey, depth?)`: Fetches entire file data.
     *   `getNode(fileKey, nodeId, depth?)`: Fetches specific node data.
-        *   Both `getFile` and `getNode` call `parseFigmaResponse()` to simplify the data.
-        *   They also use `writeLogs()` to save raw and simplified Figma responses as YAML files (`figma-raw.yml`, `figma-simplified.yml`) in a `logs/` directory when `NODE_ENV === "development"`.
-    *   `getImageFills(fileKey, nodes, localPath)`: Fetches URLs for image fills via `/files/${fileKey}/images` and then downloads them using `downloadFigmaImage` utility.
-    *   `getImages(fileKey, nodes, localPath)`: Fetches rendered images (PNGs with `scale=2`, SVGs) via `/images/${fileKey}` and downloads them using `downloadFigmaImage`.
+        *   Both `getFile` and `getNode` call `parseFigmaResponse()` (from `simplify-node-response.ts`) to simplify the data.
+        *   Logs raw and simplified responses in development mode.
+    *   `getImageFills(fileKey, nodes, localPath)`: Fetches and downloads image fills.
+    *   `getImages(fileKey, nodes, localPath)`: Fetches and downloads rendered images.
+    *   `getVariables(fileKey, scope)`: New method to fetch Figma Variables using the Figma API.
 
 *   **`src/services/simplify-node-response.ts`**:
-    *   This is a critical module for transforming raw Figma API data into the `SimplifiedDesign` and `SimplifiedNode` structures.
+    *   Critical module for transforming raw Figma API data into `SimplifiedDesign` and `SimplifiedNode`.
     *   **`SimplifiedDesign`**: `{ name, lastModified, thumbnailUrl, nodes: SimplifiedNode[], globalVars: GlobalVars }`
     *   **`SimplifiedNode`**: `{ id, name, type, boundingBox?, text?, textStyle? (ID), fills? (ID), strokes? (ID), effects? (ID), opacity?, borderRadius?, layout? (ID), children? }`
     *   **`GlobalVars`**: `{ styles: Record<StyleId, StyleObject> }`. This is key for de-duplication. Styles (text, fills, strokes, effects, layouts) are stored here once, and nodes reference them via a `StyleId` (e.g., `fill_ABC123`).
     *   `parseFigmaResponse(data)`: Main function. Iterates through Figma nodes, filters invisible ones, and calls `parseNode()`.
-    *   `parseNode(globalVars, figmaNode, parentNode?)`: Recursively processes each node:
-        *   Extracts basic properties.
-        *   For styles (text, fill, stroke, effect, layout), it processes the style data (often using a transformer from `src/transformers/`) and then calls `findOrCreateVar()`.
-        *   `findOrCreateVar(globalVars, value, prefix)`: Checks if an identical style object already exists in `globalVars.styles`. If so, reuses its ID. Otherwise, generates a new ID using `generateVarId()` (from `common.ts`), stores the style object, and returns the ID.
-        *   Handles children recursively.
-    *   Contains TODOs for future improvements like better layout vocabulary translation and design token parsing.
+    *   `parseNode(globalVars, figmaNode, parentNode?)`: Recursively processes each node.
+    *   `findOrCreateVar(globalVars, value, prefix)`: De-duplicates styles by storing them in `globalVars.styles`.
+    *   The core logic for data simplification remains foundational for many tools.
 
-### 3.4. Data Transformers
+### 3.4. New Service Modules
+
+Beyond the original `figma.ts` and `simplify-node-response.ts`, several new service modules in `src/services/` implement the core logic for the enhanced tools:
+
+*   **`src/services/token-generator.ts`**:
+    *   Responsible for `generateTokensFromSimplifiedDesign()`.
+    *   Analyzes the `SimplifiedDesign` object (especially `globalVars` and node styles) to extract and structure design tokens like colors, typography, spacing, effects, etc.
+    *   Categorizes tokens and prepares them for various output formats or further analysis.
+
+*   **`src/services/doc-generator.ts`**:
+    *   Contains `generateStructuredDesignSystemDocumentation()`.
+    *   Takes the `SimplifiedDesign` and generates a comprehensive set of Markdown documents.
+    *   This includes overviews, style guides (based on tokens), and component documentation (potentially integrating with `component-analysis.ts` output or its logic).
+
+*   **`src/services/variable-deduction.ts`**:
+    *   Implements `deduceVariablesFromTokens()` and `formatAsVariablesResponse()`.
+    *   Provides a workaround for non-Enterprise Figma users by analyzing generated design tokens to infer variable-like structures (e.g., finding common color values and grouping them).
+    *   Formats these deduced variables in a way that might be compatible with systems expecting Figma Variables API output.
+
+*   **`src/services/design-system-tools.ts`**:
+    *   A collection of functions powering several advanced tools:
+        *   `compareDesignTokens()`: Compares two sets of generated tokens.
+        *   `validateDesignSystem()`: Checks generated tokens against a set of design system best practices and rules.
+        *   `checkAccessibility()`: Analyzes generated tokens for WCAG compliance issues (e.g., color contrast).
+        *   `migrateTokens()`: Converts generated tokens into different specified formats (e.g., Tailwind config, CSS variables).
+        *   `checkDesignCodeSync()`: Compares tokens generated from Figma with tokens extracted from a codebase file.
+
+*   **`src/services/component-analysis.ts`**:
+    *   Houses the `analyzeComponents()` function.
+    *   Performs a deep analysis of the `SimplifiedDesign` with a focus on components.
+    *   Identifies component structures, variants, inferred properties (props), relationships, and applies atomic design classification.
+    *   Aims to provide rich, semantic information about components to aid AI in generating more accurate and context-aware code.
+    *   Generates reports on implementation readiness and detected design patterns.
+
+### 3.5. Data Transformers
 
 These modules take specific parts of a Figma node's data and convert them into a simplified, often CSS-friendly, format. The results are typically then stored in `globalVars` by `simplify-node-response.ts`.
 
@@ -174,7 +246,7 @@ These modules take specific parts of a Figma node's data and convert them into a
     *   Properties: `colors` (array of `SimplifiedFill` from parsed paints), `strokeWeight` (e.g., "1px"), `strokeDashes` (array of numbers), `strokeWeights` (CSS shorthand for individual stroke weights).
     *   Uses `parsePaint` and `generateCSSShorthand` (from `common.ts`).
 
-### 3.5. Utility Modules (`src/utils/`)
+### 3.6. Utility Modules (`src/utils/`)
 
 *   **`src/utils/common.ts`**:
     *   `downloadFigmaImage(fileName, localPath, imageUrl)`: Downloads an image from a URL and saves it locally using `fetch` and Node.js streams. Creates the directory if it doesn't exist.
@@ -247,4 +319,4 @@ Typically, it would be run using `npx figma-developer-mcp --figma-api-key YOUR_K
 *   Clean up image download code, particularly `getImages` in `FigmaService`.
 *   Address potential issue where SSE connections might fail after a StreamableHTTP connection is made to the same Express server.
 
-This document should provide a solid foundation for understanding the `figma-developer-mcp` codebase. 
+This document should provide a solid foundation for understanding the `@tothienbao6a0/figma-mcp-server` codebase. 
