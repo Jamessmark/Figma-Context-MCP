@@ -23,7 +23,7 @@ import fsPromises from "fs/promises";
 
 const serverInfo = {
   name: "Figma MCP Server by Bao To",
-  version: "0.6.36",
+  version: "0.6.40",
 };
 
 const serverOptions = {
