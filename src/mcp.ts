@@ -20,9 +20,10 @@ import {
 } from "./services/design-system-tools.js";
 import { analyzeComponents } from "./services/component-analysis.js";
 import fsPromises from "fs/promises";
+import { generateComponentExample } from './services/component-generator.js';
 
 const serverInfo = {
-  name: "Figma MCP Server by Bao To",
+  name: "Figma MCP Server by Jamess mark",
   version: "0.6.41",
 };
 
@@ -101,6 +102,41 @@ function registerTools(server: McpServer, figmaService: FigmaService): void {
         return {
           isError: true,
           content: [{ type: "text", text: `Error fetching file: ${message}` }],
+        };
+      }
+    },
+  );
+
+  // New tool to get component example
+  server.tool(
+    "get_component_example",
+    "Get example code for a specific component (e.g. 'timer', 'price', 'countdown') by its name",
+    {
+      componentName: z
+        .string()
+        .describe("The name of the component to get example code for"),
+    },
+    async ({ componentName }) => {
+      try {
+        Logger.log(`Generating example code for component ${componentName}`);
+
+        // 生成组件代码
+        const exampleCode = generateComponentExample(componentName);
+
+        // 返回结果
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `// ${componentName}.tsx\n${exampleCode.component}`,
+            }
+          ],
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : JSON.stringify(error);
+        Logger.error(`Error generating example for component ${componentName}:`, message);
+        return {
+          content: [{ type: "text" as const, text: `Error generating example: ${message}` }],
         };
       }
     },
@@ -809,6 +845,8 @@ ${outputFilePath ? `\n💾 **Full analysis saved to:** ${outputFilePath}` : ''}`
       }
     }
   );
+
+  
 }
 
 export { createServer };

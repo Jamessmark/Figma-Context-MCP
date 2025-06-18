@@ -361,6 +361,27 @@ function parseNode(
     simplified.borderRadius = `${n.rectangleCornerRadii[0]}px ${n.rectangleCornerRadii[1]}px ${n.rectangleCornerRadii[2]}px ${n.rectangleCornerRadii[3]}px`;
   }
 
+  // 处理绝对位置和尺寸
+  if (hasValue("absoluteBoundingBox", n) && n.absoluteBoundingBox) {
+    // 如果有父节点，计算相对位置
+    if (parent && 'absoluteBoundingBox' in parent && parent.absoluteBoundingBox) {
+      simplified.boundingBox = {
+        x: n.absoluteBoundingBox.x - parent.absoluteBoundingBox.x,
+        y: n.absoluteBoundingBox.y - parent.absoluteBoundingBox.y,
+        width: n.absoluteBoundingBox.width,
+        height: n.absoluteBoundingBox.height,
+      };
+    } else {
+      // 如果没有父节点，使用绝对位置
+      simplified.boundingBox = {
+        x: n.absoluteBoundingBox.x,
+        y: n.absoluteBoundingBox.y,
+        width: n.absoluteBoundingBox.width,
+        height: n.absoluteBoundingBox.height,
+      };
+    }
+  }
+
   // Recursively process child nodes
   if (hasValue("children", n) && n.children.length > 0) {
     let children = n.children
@@ -379,3 +400,4 @@ function parseNode(
 
   return removeEmptyKeys(simplified);
 }
+

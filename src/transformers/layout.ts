@@ -206,32 +206,25 @@ function buildSimplifiedLayoutValues(
     vertical: convertSizing(n.layoutSizingVertical),
   };
 
-  // Only include positioning-related properties if parent layout isn't flex or if the node is absolute
-  if (isFrame(parent) && (parent?.layoutMode === "NONE" || n.layoutPositioning === "ABSOLUTE")) {
-    if (n.layoutPositioning === "ABSOLUTE") {
-      layoutValues.position = "absolute";
-    }
-    if (n.absoluteBoundingBox && parent.absoluteBoundingBox) {
-      layoutValues.locationRelativeToParent = {
-        x: n.absoluteBoundingBox.x - (parent?.absoluteBoundingBox?.x ?? n.absoluteBoundingBox.x),
-        y: n.absoluteBoundingBox.y - (parent?.absoluteBoundingBox?.y ?? n.absoluteBoundingBox.y),
-      };
-    }
-    return layoutValues;
+  // 总是计算相对位置，不管是否是绝对定位
+  if (isFrame(parent) && n.absoluteBoundingBox && parent.absoluteBoundingBox) {
+    layoutValues.locationRelativeToParent = {
+      x: n.absoluteBoundingBox.x - parent.absoluteBoundingBox.x,
+      y: n.absoluteBoundingBox.y - parent.absoluteBoundingBox.y,
+    };
   }
 
-  // Handle dimensions based on layout growth and alignment
+  // 处理基于布局增长和对齐的尺寸
   if (isRectangle("absoluteBoundingBox", n) && isRectangle("absoluteBoundingBox", parent)) {
     const dimensions: { width?: number; height?: number; aspectRatio?: number } = {};
 
-    // Only include dimensions that aren't meant to stretch
+    // 只包含不需要拉伸的尺寸
     if (mode === "row") {
       if (!n.layoutGrow && n.layoutSizingHorizontal == "FIXED")
         dimensions.width = n.absoluteBoundingBox.width;
       if (n.layoutAlign !== "STRETCH" && n.layoutSizingVertical == "FIXED")
         dimensions.height = n.absoluteBoundingBox.height;
     } else if (mode === "column") {
-      // column
       if (n.layoutAlign !== "STRETCH" && n.layoutSizingHorizontal == "FIXED")
         dimensions.width = n.absoluteBoundingBox.width;
       if (!n.layoutGrow && n.layoutSizingVertical == "FIXED")
